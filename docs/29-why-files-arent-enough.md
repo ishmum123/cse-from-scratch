@@ -20,7 +20,7 @@ Databases organize records so they can be found, updated, and queried efficientl
 
 We build a minimal `file storage` model in Python.
 
-Source: [`python/chapter29/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter29/main.py)  ·  [view in browser](assets/simulations/chapter29/sim.py)
+Source: [`python/chapter29/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter29/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter29/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter29/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter29/sim.py)  ·  [view in browser](assets/simulations/chapter29/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter29/sim.py
-```
-
-A browser version is available at [`browser/chapter29/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter29/index.html)  ·  [run live](assets/browser/chapter29/index.html).
+Source: [`browser/chapter29/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter29/index.html)  ·  [run live](assets/browser/chapter29/index.html).
 
 ## Exercises
 

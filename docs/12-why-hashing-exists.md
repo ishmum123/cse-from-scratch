@@ -20,7 +20,7 @@ A hash function maps keys directly to slots, trading space for O(1) access.
 
 We build a minimal `hash table` model in Python.
 
-Source: [`python/chapter12/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter12/main.py)  ·  [view in browser](assets/simulations/chapter12/sim.py)
+Source: [`python/chapter12/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter12/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter12/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter12/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter12/sim.py)  ·  [view in browser](assets/simulations/chapter12/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter12/sim.py
-```
-
-A browser version is available at [`browser/chapter12/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter12/index.html)  ·  [run live](assets/browser/chapter12/index.html).
+Source: [`browser/chapter12/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter12/index.html)  ·  [run live](assets/browser/chapter12/index.html).
 
 ## Exercises
 

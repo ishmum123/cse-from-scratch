@@ -20,7 +20,7 @@ Queues absorb bursts and let consumers process work at their own pace.
 
 We build a minimal `message queue` model in Python.
 
-Source: [`python/chapter48/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter48/main.py)  ·  [view in browser](assets/simulations/chapter48/sim.py)
+Source: [`python/chapter48/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter48/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter48/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter48/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter48/sim.py)  ·  [view in browser](assets/simulations/chapter48/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter48/sim.py
-```
-
-A browser version is available at [`browser/chapter48/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter48/index.html)  ·  [run live](assets/browser/chapter48/index.html).
+Source: [`browser/chapter48/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter48/index.html)  ·  [run live](assets/browser/chapter48/index.html).
 
 ## Exercises
 

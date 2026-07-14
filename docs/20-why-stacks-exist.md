@@ -20,7 +20,7 @@ A stack stores return addresses and local state in last-in-first-out order.
 
 We build a minimal `stack` model in Python.
 
-Source: [`python/chapter20/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter20/main.py)  ·  [view in browser](assets/simulations/chapter20/sim.py)
+Source: [`python/chapter20/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter20/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter20/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter20/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter20/sim.py)  ·  [view in browser](assets/simulations/chapter20/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter20/sim.py
-```
-
-A browser version is available at [`browser/chapter20/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter20/index.html)  ·  [run live](assets/browser/chapter20/index.html).
+Source: [`browser/chapter20/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter20/index.html)  ·  [run live](assets/browser/chapter20/index.html).
 
 ## Exercises
 

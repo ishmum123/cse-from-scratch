@@ -20,7 +20,7 @@ Two-phase commit and sagas trade strong consistency for coordination overhead an
 
 We build a minimal `distributed transaction` model in Python.
 
-Source: [`python/chapter45/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter45/main.py)  ·  [view in browser](assets/simulations/chapter45/sim.py)
+Source: [`python/chapter45/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter45/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter45/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter45/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter45/sim.py)  ·  [view in browser](assets/simulations/chapter45/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter45/sim.py
-```
-
-A browser version is available at [`browser/chapter45/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter45/index.html)  ·  [run live](assets/browser/chapter45/index.html).
+Source: [`browser/chapter45/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter45/index.html)  ·  [run live](assets/browser/chapter45/index.html).
 
 ## Exercises
 

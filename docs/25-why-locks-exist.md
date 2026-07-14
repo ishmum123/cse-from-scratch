@@ -20,7 +20,7 @@ Locks enforce mutual exclusion so only one thread touches shared state at a time
 
 We build a minimal `lock` model in Python.
 
-Source: [`python/chapter25/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter25/main.py)  ·  [view in browser](assets/simulations/chapter25/sim.py)
+Source: [`python/chapter25/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter25/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter25/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter25/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter25/sim.py)  ·  [view in browser](assets/simulations/chapter25/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter25/sim.py
-```
-
-A browser version is available at [`browser/chapter25/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter25/index.html)  ·  [run live](assets/browser/chapter25/index.html).
+Source: [`browser/chapter25/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter25/index.html)  ·  [run live](assets/browser/chapter25/index.html).
 
 ## Exercises
 

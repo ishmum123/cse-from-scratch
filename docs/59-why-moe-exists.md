@@ -20,7 +20,7 @@ Mixture of Experts routes each token to a small subset of specialists.
 
 We build a minimal `mixture of experts` model in Python.
 
-Source: [`python/chapter59/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter59/main.py)  ·  [view in browser](assets/simulations/chapter59/sim.py)
+Source: [`python/chapter59/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter59/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter59/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter59/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter59/sim.py)  ·  [view in browser](assets/simulations/chapter59/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter59/sim.py
-```
-
-A browser version is available at [`browser/chapter59/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter59/index.html)  ·  [run live](assets/browser/chapter59/index.html).
+Source: [`browser/chapter59/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter59/index.html)  ·  [run live](assets/browser/chapter59/index.html).
 
 ## Exercises
 

@@ -20,7 +20,7 @@ Consensus protocols let a group agree on a value despite failures.
 
 We build a minimal `consensus` model in Python.
 
-Source: [`python/chapter42/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter42/main.py)  ·  [view in browser](assets/simulations/chapter42/sim.py)
+Source: [`python/chapter42/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter42/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter42/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter42/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter42/sim.py)  ·  [view in browser](assets/simulations/chapter42/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter42/sim.py
-```
-
-A browser version is available at [`browser/chapter42/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter42/index.html)  ·  [run live](assets/browser/chapter42/index.html).
+Source: [`browser/chapter42/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter42/index.html)  ·  [run live](assets/browser/chapter42/index.html).
 
 ## Exercises
 

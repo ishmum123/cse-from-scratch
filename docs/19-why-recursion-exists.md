@@ -20,7 +20,7 @@ Recursion solves a problem by reducing it to a base case and a self-similar sub-
 
 We build a minimal `recursion` model in Python.
 
-Source: [`python/chapter19/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter19/main.py)  ·  [view in browser](assets/simulations/chapter19/sim.py)
+Source: [`python/chapter19/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter19/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter19/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter19/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter19/sim.py)  ·  [view in browser](assets/simulations/chapter19/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter19/sim.py
-```
-
-A browser version is available at [`browser/chapter19/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter19/index.html)  ·  [run live](assets/browser/chapter19/index.html).
+Source: [`browser/chapter19/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter19/index.html)  ·  [run live](assets/browser/chapter19/index.html).
 
 ## Exercises
 

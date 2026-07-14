@@ -20,7 +20,7 @@ Indexes maintain a secondary lookup structure so queries can jump to relevant ro
 
 We build a minimal `index` model in Python.
 
-Source: [`python/chapter30/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter30/main.py)  ·  [view in browser](assets/simulations/chapter30/sim.py)
+Source: [`python/chapter30/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter30/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter30/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter30/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter30/sim.py)  ·  [view in browser](assets/simulations/chapter30/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter30/sim.py
-```
-
-A browser version is available at [`browser/chapter30/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter30/index.html)  ·  [run live](assets/browser/chapter30/index.html).
+Source: [`browser/chapter30/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter30/index.html)  ·  [run live](assets/browser/chapter30/index.html).
 
 ## Exercises
 

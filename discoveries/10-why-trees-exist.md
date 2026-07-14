@@ -4,6 +4,5 @@
 - **Key idea:** A tree keeps order while allowing fast inserts and deletes through branching.
 - **Python:** [`python/chapter10/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter10/main.py)
 - **C++:** [`cpp/chapter10/main.cpp`](https://github.com/ishmum123/cse-from-scratch/blob/main/cpp/chapter10/main.cpp)
-- **Simulation:** [`simulations/chapter10/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter10/sim.py)
-- **Browser sim:** [`browser/chapter10/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter10/index.html)
+- **Simulation:** [`browser/chapter10/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter10/index.html)
 - **Continue:** [Why Balancing Exists](../docs/11-why-balancing-exists.md)

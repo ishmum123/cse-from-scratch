@@ -20,7 +20,7 @@ Load balancers spread traffic across many backends and hide failures.
 
 We build a minimal `load balancer` model in Python.
 
-Source: [`python/chapter39/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter39/main.py)  ·  [view in browser](assets/simulations/chapter39/sim.py)
+Source: [`python/chapter39/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter39/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter39/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter39/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter39/sim.py)  ·  [view in browser](assets/simulations/chapter39/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter39/sim.py
-```
-
-A browser version is available at [`browser/chapter39/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter39/index.html)  ·  [run live](assets/browser/chapter39/index.html).
+Source: [`browser/chapter39/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter39/index.html)  ·  [run live](assets/browser/chapter39/index.html).
 
 ## Exercises
 

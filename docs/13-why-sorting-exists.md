@@ -20,7 +20,7 @@ Sorting arranges data so that searching, merging, and scanning become simple and
 
 We build a minimal `sort` model in Python.
 
-Source: [`python/chapter13/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter13/main.py)  ·  [view in browser](assets/simulations/chapter13/sim.py)
+Source: [`python/chapter13/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter13/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter13/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter13/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter13/sim.py)  ·  [view in browser](assets/simulations/chapter13/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter13/sim.py
-```
-
-A browser version is available at [`browser/chapter13/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter13/index.html)  ·  [run live](assets/browser/chapter13/index.html).
+Source: [`browser/chapter13/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter13/index.html)  ·  [run live](assets/browser/chapter13/index.html).
 
 ## Exercises
 

@@ -20,7 +20,7 @@ Without a shared clock, distributed systems must reason about causality and orde
 
 We build a minimal `clock` model in Python.
 
-Source: [`python/chapter41/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter41/main.py)  ·  [view in browser](assets/simulations/chapter41/sim.py)
+Source: [`python/chapter41/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter41/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter41/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter41/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter41/sim.py)  ·  [view in browser](assets/simulations/chapter41/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter41/sim.py
-```
-
-A browser version is available at [`browser/chapter41/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter41/index.html)  ·  [run live](assets/browser/chapter41/index.html).
+Source: [`browser/chapter41/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter41/index.html)  ·  [run live](assets/browser/chapter41/index.html).
 
 ## Exercises
 

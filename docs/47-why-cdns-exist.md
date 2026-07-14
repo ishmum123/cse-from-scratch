@@ -20,7 +20,7 @@ CDNs place content near users, reducing latency and origin load.
 
 We build a minimal `cdn` model in Python.
 
-Source: [`python/chapter47/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter47/main.py)  ·  [view in browser](assets/simulations/chapter47/sim.py)
+Source: [`python/chapter47/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter47/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter47/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter47/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter47/sim.py)  ·  [view in browser](assets/simulations/chapter47/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter47/sim.py
-```
-
-A browser version is available at [`browser/chapter47/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter47/index.html)  ·  [run live](assets/browser/chapter47/index.html).
+Source: [`browser/chapter47/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter47/index.html)  ·  [run live](assets/browser/chapter47/index.html).
 
 ## Exercises
 

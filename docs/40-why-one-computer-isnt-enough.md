@@ -20,7 +20,7 @@ Distributed systems partition work across independent machines connected by a ne
 
 We build a minimal `distribution` model in Python.
 
-Source: [`python/chapter40/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter40/main.py)  ·  [view in browser](assets/simulations/chapter40/sim.py)
+Source: [`python/chapter40/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter40/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter40/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter40/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter40/sim.py)  ·  [view in browser](assets/simulations/chapter40/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter40/sim.py
-```
-
-A browser version is available at [`browser/chapter40/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter40/index.html)  ·  [run live](assets/browser/chapter40/index.html).
+Source: [`browser/chapter40/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter40/index.html)  ·  [run live](assets/browser/chapter40/index.html).
 
 ## Exercises
 

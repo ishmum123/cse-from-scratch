@@ -20,7 +20,7 @@ Attention computes pairwise relevance so each token can gather context from the 
 
 We build a minimal `attention` model in Python.
 
-Source: [`python/chapter54/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter54/main.py)  ·  [view in browser](assets/simulations/chapter54/sim.py)
+Source: [`python/chapter54/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter54/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter54/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter54/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter54/sim.py)  ·  [view in browser](assets/simulations/chapter54/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter54/sim.py
-```
-
-A browser version is available at [`browser/chapter54/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter54/index.html)  ·  [run live](assets/browser/chapter54/index.html).
+Source: [`browser/chapter54/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter54/index.html)  ·  [run live](assets/browser/chapter54/index.html).
 
 ## Exercises
 

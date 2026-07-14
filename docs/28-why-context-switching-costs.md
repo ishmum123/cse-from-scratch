@@ -20,7 +20,7 @@ Saving and restoring registers, caches, and TLB state makes switching expensive.
 
 We build a minimal `context switch` model in Python.
 
-Source: [`python/chapter28/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter28/main.py)  ·  [view in browser](assets/simulations/chapter28/sim.py)
+Source: [`python/chapter28/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter28/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter28/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter28/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter28/sim.py)  ·  [view in browser](assets/simulations/chapter28/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter28/sim.py
-```
-
-A browser version is available at [`browser/chapter28/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter28/index.html)  ·  [run live](assets/browser/chapter28/index.html).
+Source: [`browser/chapter28/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter28/index.html)  ·  [run live](assets/browser/chapter28/index.html).
 
 ## Exercises
 

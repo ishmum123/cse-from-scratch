@@ -20,7 +20,7 @@ Search engines index, tokenize, and score documents to answer free-text queries.
 
 We build a minimal `search engine` model in Python.
 
-Source: [`python/chapter51/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter51/main.py)  ·  [view in browser](assets/simulations/chapter51/sim.py)
+Source: [`python/chapter51/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter51/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter51/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter51/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter51/sim.py)  ·  [view in browser](assets/simulations/chapter51/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter51/sim.py
-```
-
-A browser version is available at [`browser/chapter51/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter51/index.html)  ·  [run live](assets/browser/chapter51/index.html).
+Source: [`browser/chapter51/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter51/index.html)  ·  [run live](assets/browser/chapter51/index.html).
 
 ## Exercises
 

@@ -20,7 +20,7 @@ Packets split messages into small, independently routed units.
 
 We build a minimal `packet` model in Python.
 
-Source: [`python/chapter36/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter36/main.py)  ·  [view in browser](assets/simulations/chapter36/sim.py)
+Source: [`python/chapter36/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter36/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter36/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter36/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter36/sim.py)  ·  [view in browser](assets/simulations/chapter36/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter36/sim.py
-```
-
-A browser version is available at [`browser/chapter36/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter36/index.html)  ·  [run live](assets/browser/chapter36/index.html).
+Source: [`browser/chapter36/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter36/index.html)  ·  [run live](assets/browser/chapter36/index.html).
 
 ## Exercises
 

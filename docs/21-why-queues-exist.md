@@ -20,7 +20,7 @@ A queue processes items in first-in-first-out order, decoupling producers and co
 
 We build a minimal `queue` model in Python.
 
-Source: [`python/chapter21/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter21/main.py)  ·  [view in browser](assets/simulations/chapter21/sim.py)
+Source: [`python/chapter21/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter21/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter21/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter21/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter21/sim.py)  ·  [view in browser](assets/simulations/chapter21/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter21/sim.py
-```
-
-A browser version is available at [`browser/chapter21/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter21/index.html)  ·  [run live](assets/browser/chapter21/index.html).
+Source: [`browser/chapter21/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter21/index.html)  ·  [run live](assets/browser/chapter21/index.html).
 
 ## Exercises
 

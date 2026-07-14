@@ -20,7 +20,7 @@ Sharding splits data by key across many nodes so each owns a subset.
 
 We build a minimal `sharding` model in Python.
 
-Source: [`python/chapter49/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter49/main.py)  ·  [view in browser](assets/simulations/chapter49/sim.py)
+Source: [`python/chapter49/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter49/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter49/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter49/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter49/sim.py)  ·  [view in browser](assets/simulations/chapter49/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter49/sim.py
-```
-
-A browser version is available at [`browser/chapter49/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter49/index.html)  ·  [run live](assets/browser/chapter49/index.html).
+Source: [`browser/chapter49/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter49/index.html)  ·  [run live](assets/browser/chapter49/index.html).
 
 ## Exercises
 

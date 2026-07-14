@@ -20,7 +20,7 @@ Replication keeps copies on multiple nodes for durability and read scaling.
 
 We build a minimal `replication` model in Python.
 
-Source: [`python/chapter50/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter50/main.py)  ·  [view in browser](assets/simulations/chapter50/sim.py)
+Source: [`python/chapter50/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter50/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter50/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter50/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter50/sim.py)  ·  [view in browser](assets/simulations/chapter50/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter50/sim.py
-```
-
-A browser version is available at [`browser/chapter50/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter50/index.html)  ·  [run live](assets/browser/chapter50/index.html).
+Source: [`browser/chapter50/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter50/index.html)  ·  [run live](assets/browser/chapter50/index.html).
 
 ## Exercises
 

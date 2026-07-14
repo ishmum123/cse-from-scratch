@@ -20,7 +20,7 @@ Addresses uniquely identify machines on a network so messages can be routed.
 
 We build a minimal `addressing` model in Python.
 
-Source: [`python/chapter35/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter35/main.py)  ·  [view in browser](assets/simulations/chapter35/sim.py)
+Source: [`python/chapter35/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter35/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter35/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter35/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter35/sim.py)  ·  [view in browser](assets/simulations/chapter35/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter35/sim.py
-```
-
-A browser version is available at [`browser/chapter35/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter35/index.html)  ·  [run live](assets/browser/chapter35/index.html).
+Source: [`browser/chapter35/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter35/index.html)  ·  [run live](assets/browser/chapter35/index.html).
 
 ## Exercises
 

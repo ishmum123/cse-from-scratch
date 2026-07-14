@@ -20,7 +20,7 @@ Caches keep hot data close to consumers, trading freshness for speed.
 
 We build a minimal `cache` model in Python.
 
-Source: [`python/chapter46/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter46/main.py)  ·  [view in browser](assets/simulations/chapter46/sim.py)
+Source: [`python/chapter46/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter46/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter46/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter46/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter46/sim.py)  ·  [view in browser](assets/simulations/chapter46/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter46/sim.py
-```
-
-A browser version is available at [`browser/chapter46/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter46/index.html)  ·  [run live](assets/browser/chapter46/index.html).
+Source: [`browser/chapter46/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter46/index.html)  ·  [run live](assets/browser/chapter46/index.html).
 
 ## Exercises
 

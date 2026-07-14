@@ -20,7 +20,7 @@ Counting assigns a stable symbol to a quantity so it can be remembered and commu
 
 We build a minimal `counting` model in Python.
 
-Source: [`python/chapter01/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter01/main.py)  ·  [view in browser](assets/simulations/chapter01/sim.py)
+Source: [`python/chapter01/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter01/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter01/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter01/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter01/sim.py)  ·  [view in browser](assets/simulations/chapter01/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter01/sim.py
-```
-
-A browser version is available at [`browser/chapter01/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter01/index.html)  ·  [run live](assets/browser/chapter01/index.html).
+Source: [`browser/chapter01/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter01/index.html)  ·  [run live](assets/browser/chapter01/index.html).
 
 ## Exercises
 

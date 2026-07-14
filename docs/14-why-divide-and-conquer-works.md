@@ -20,7 +20,7 @@ Breaking a problem into smaller independent pieces and combining their solutions
 
 We build a minimal `divide and conquer` model in Python.
 
-Source: [`python/chapter14/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter14/main.py)  ·  [view in browser](assets/simulations/chapter14/sim.py)
+Source: [`python/chapter14/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter14/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter14/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter14/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter14/sim.py)  ·  [view in browser](assets/simulations/chapter14/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter14/sim.py
-```
-
-A browser version is available at [`browser/chapter14/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter14/index.html)  ·  [run live](assets/browser/chapter14/index.html).
+Source: [`browser/chapter14/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter14/index.html)  ·  [run live](assets/browser/chapter14/index.html).
 
 ## Exercises
 

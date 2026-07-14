@@ -20,7 +20,7 @@ A planner chooses the cheapest way to execute a query using statistics and cost 
 
 We build a minimal `query planner` model in Python.
 
-Source: [`python/chapter34/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter34/main.py)  ·  [view in browser](assets/simulations/chapter34/sim.py)
+Source: [`python/chapter34/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter34/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter34/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter34/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter34/sim.py)  ·  [view in browser](assets/simulations/chapter34/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter34/sim.py
-```
-
-A browser version is available at [`browser/chapter34/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter34/index.html)  ·  [run live](assets/browser/chapter34/index.html).
+Source: [`browser/chapter34/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter34/index.html)  ·  [run live](assets/browser/chapter34/index.html).
 
 ## Exercises
 

@@ -20,7 +20,7 @@ Copying costs time proportional to size, so we pass references or reuse buffers 
 
 We build a minimal `copy` model in Python.
 
-Source: [`python/chapter05/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter05/main.py)  ·  [view in browser](assets/simulations/chapter05/sim.py)
+Source: [`python/chapter05/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter05/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter05/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter05/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter05/sim.py)  ·  [view in browser](assets/simulations/chapter05/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter05/sim.py
-```
-
-A browser version is available at [`browser/chapter05/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter05/index.html)  ·  [run live](assets/browser/chapter05/index.html).
+Source: [`browser/chapter05/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter05/index.html)  ·  [run live](assets/browser/chapter05/index.html).
 
 ## Exercises
 

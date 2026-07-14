@@ -20,7 +20,7 @@ Memoization stores answers to overlapping sub-problems so each is solved only on
 
 We build a minimal `dynamic programming` model in Python.
 
-Source: [`python/chapter15/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter15/main.py)  ·  [view in browser](assets/simulations/chapter15/sim.py)
+Source: [`python/chapter15/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter15/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter15/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter15/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter15/sim.py)  ·  [view in browser](assets/simulations/chapter15/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter15/sim.py
-```
-
-A browser version is available at [`browser/chapter15/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter15/index.html)  ·  [run live](assets/browser/chapter15/index.html).
+Source: [`browser/chapter15/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter15/index.html)  ·  [run live](assets/browser/chapter15/index.html).
 
 ## Exercises
 

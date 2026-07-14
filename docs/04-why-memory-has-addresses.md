@@ -20,7 +20,7 @@ Every location in memory has an address, so the machine can fetch or store by nu
 
 We build a minimal `address` model in Python.
 
-Source: [`python/chapter04/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter04/main.py)  ·  [view in browser](assets/simulations/chapter04/sim.py)
+Source: [`python/chapter04/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter04/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter04/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter04/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter04/sim.py)  ·  [view in browser](assets/simulations/chapter04/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter04/sim.py
-```
-
-A browser version is available at [`browser/chapter04/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter04/index.html)  ·  [run live](assets/browser/chapter04/index.html).
+Source: [`browser/chapter04/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter04/index.html)  ·  [run live](assets/browser/chapter04/index.html).
 
 ## Exercises
 

@@ -20,7 +20,7 @@ Multi-version concurrency control lets readers see a consistent snapshot without
 
 We build a minimal `mvcc` model in Python.
 
-Source: [`python/chapter33/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter33/main.py)  ·  [view in browser](assets/simulations/chapter33/sim.py)
+Source: [`python/chapter33/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter33/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter33/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter33/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter33/sim.py)  ·  [view in browser](assets/simulations/chapter33/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter33/sim.py
-```
-
-A browser version is available at [`browser/chapter33/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter33/index.html)  ·  [run live](assets/browser/chapter33/index.html).
+Source: [`browser/chapter33/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter33/index.html)  ·  [run live](assets/browser/chapter33/index.html).
 
 ## Exercises
 

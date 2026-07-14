@@ -20,7 +20,7 @@ Tensor parallelism splits layers across devices so a model larger than one GPU c
 
 We build a minimal `tensor parallelism` model in Python.
 
-Source: [`python/chapter58/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter58/main.py)  ·  [view in browser](assets/simulations/chapter58/sim.py)
+Source: [`python/chapter58/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter58/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter58/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter58/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter58/sim.py)  ·  [view in browser](assets/simulations/chapter58/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter58/sim.py
-```
-
-A browser version is available at [`browser/chapter58/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter58/index.html)  ·  [run live](assets/browser/chapter58/index.html).
+Source: [`browser/chapter58/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter58/index.html)  ·  [run live](assets/browser/chapter58/index.html).
 
 ## Exercises
 

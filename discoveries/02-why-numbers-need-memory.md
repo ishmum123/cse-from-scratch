@@ -4,6 +4,5 @@
 - **Key idea:** A register or variable holds a value so it can be reused later.
 - **Python:** [`python/chapter02/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter02/main.py)
 - **C++:** [`cpp/chapter02/main.cpp`](https://github.com/ishmum123/cse-from-scratch/blob/main/cpp/chapter02/main.cpp)
-- **Simulation:** [`simulations/chapter02/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter02/sim.py)
-- **Browser sim:** [`browser/chapter02/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter02/index.html)
+- **Simulation:** [`browser/chapter02/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter02/index.html)
 - **Continue:** [Why Arrays Exist](../docs/03-why-arrays-exist.md)

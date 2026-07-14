@@ -20,7 +20,7 @@ An array stores many values under one name at contiguous addresses.
 
 We build a minimal `array` model in Python.
 
-Source: [`python/chapter03/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter03/main.py)  ·  [view in browser](assets/simulations/chapter03/sim.py)
+Source: [`python/chapter03/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter03/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter03/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter03/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter03/sim.py)  ·  [view in browser](assets/simulations/chapter03/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter03/sim.py
-```
-
-A browser version is available at [`browser/chapter03/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter03/index.html)  ·  [run live](assets/browser/chapter03/index.html).
+Source: [`browser/chapter03/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter03/index.html)  ·  [run live](assets/browser/chapter03/index.html).
 
 ## Exercises
 

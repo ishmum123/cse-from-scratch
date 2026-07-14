@@ -20,7 +20,7 @@ Graphs model relationships explicitly, unlocking searches over states, paths, an
 
 We build a minimal `graph` model in Python.
 
-Source: [`python/chapter17/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter17/main.py)  ·  [view in browser](assets/simulations/chapter17/sim.py)
+Source: [`python/chapter17/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter17/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter17/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter17/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter17/sim.py)  ·  [view in browser](assets/simulations/chapter17/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter17/sim.py
-```
-
-A browser version is available at [`browser/chapter17/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter17/index.html)  ·  [run live](assets/browser/chapter17/index.html).
+Source: [`browser/chapter17/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter17/index.html)  ·  [run live](assets/browser/chapter17/index.html).
 
 ## Exercises
 

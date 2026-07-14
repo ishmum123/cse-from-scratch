@@ -20,7 +20,7 @@ Threads share memory within a process so multiple flows of execution can coopera
 
 We build a minimal `thread` model in Python.
 
-Source: [`python/chapter24/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter24/main.py)  ·  [view in browser](assets/simulations/chapter24/sim.py)
+Source: [`python/chapter24/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter24/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter24/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter24/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter24/sim.py)  ·  [view in browser](assets/simulations/chapter24/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter24/sim.py
-```
-
-A browser version is available at [`browser/chapter24/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter24/index.html)  ·  [run live](assets/browser/chapter24/index.html).
+Source: [`browser/chapter24/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter24/index.html)  ·  [run live](assets/browser/chapter24/index.html).
 
 ## Exercises
 

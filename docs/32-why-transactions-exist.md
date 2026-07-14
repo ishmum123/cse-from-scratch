@@ -20,7 +20,7 @@ Transactions group operations so they either all commit or all roll back.
 
 We build a minimal `transaction` model in Python.
 
-Source: [`python/chapter32/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter32/main.py)  ·  [view in browser](assets/simulations/chapter32/sim.py)
+Source: [`python/chapter32/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter32/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter32/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter32/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter32/sim.py)  ·  [view in browser](assets/simulations/chapter32/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter32/sim.py
-```
-
-A browser version is available at [`browser/chapter32/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter32/index.html)  ·  [run live](assets/browser/chapter32/index.html).
+Source: [`browser/chapter32/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter32/index.html)  ·  [run live](assets/browser/chapter32/index.html).
 
 ## Exercises
 

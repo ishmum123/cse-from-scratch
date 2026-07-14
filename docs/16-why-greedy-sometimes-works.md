@@ -20,7 +20,7 @@ Greedy algorithms work when local optimality guarantees global optimality.
 
 We build a minimal `greedy` model in Python.
 
-Source: [`python/chapter16/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter16/main.py)  ·  [view in browser](assets/simulations/chapter16/sim.py)
+Source: [`python/chapter16/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter16/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter16/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter16/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter16/sim.py)  ·  [view in browser](assets/simulations/chapter16/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter16/sim.py
-```
-
-A browser version is available at [`browser/chapter16/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter16/index.html)  ·  [run live](assets/browser/chapter16/index.html).
+Source: [`browser/chapter16/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter16/index.html)  ·  [run live](assets/browser/chapter16/index.html).
 
 ## Exercises
 

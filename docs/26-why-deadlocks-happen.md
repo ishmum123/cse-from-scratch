@@ -20,7 +20,7 @@ Deadlocks arise when threads hold resources while waiting for others in a circul
 
 We build a minimal `deadlock` model in Python.
 
-Source: [`python/chapter26/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter26/main.py)  ·  [view in browser](assets/simulations/chapter26/sim.py)
+Source: [`python/chapter26/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter26/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter26/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter26/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter26/sim.py)  ·  [view in browser](assets/simulations/chapter26/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter26/sim.py
-```
-
-A browser version is available at [`browser/chapter26/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter26/index.html)  ·  [run live](assets/browser/chapter26/index.html).
+Source: [`browser/chapter26/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter26/index.html)  ·  [run live](assets/browser/chapter26/index.html).
 
 ## Exercises
 

@@ -20,7 +20,7 @@ Functions name reusable computations and hide their internal details behind an i
 
 We build a minimal `function` model in Python.
 
-Source: [`python/chapter18/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter18/main.py)  ·  [view in browser](assets/simulations/chapter18/sim.py)
+Source: [`python/chapter18/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter18/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter18/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter18/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter18/sim.py)  ·  [view in browser](assets/simulations/chapter18/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter18/sim.py
-```
-
-A browser version is available at [`browser/chapter18/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter18/index.html)  ·  [run live](assets/browser/chapter18/index.html).
+Source: [`browser/chapter18/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter18/index.html)  ·  [run live](assets/browser/chapter18/index.html).
 
 ## Exercises
 

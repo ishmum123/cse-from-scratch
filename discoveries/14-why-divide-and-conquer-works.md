@@ -4,6 +4,5 @@
 - **Key idea:** Breaking a problem into smaller independent pieces and combining their solutions tames complexity.
 - **Python:** [`python/chapter14/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter14/main.py)
 - **C++:** [`cpp/chapter14/main.cpp`](https://github.com/ishmum123/cse-from-scratch/blob/main/cpp/chapter14/main.cpp)
-- **Simulation:** [`simulations/chapter14/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter14/sim.py)
-- **Browser sim:** [`browser/chapter14/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter14/index.html)
+- **Simulation:** [`browser/chapter14/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter14/index.html)
 - **Continue:** [Why Dynamic Programming Exists](../docs/15-why-dynamic-programming-exists.md)

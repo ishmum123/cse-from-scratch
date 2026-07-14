@@ -20,7 +20,7 @@ The KV cache stores past key/value tensors so autoregressive generation only com
 
 We build a minimal `kv cache` model in Python.
 
-Source: [`python/chapter56/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter56/main.py)  ·  [view in browser](assets/simulations/chapter56/sim.py)
+Source: [`python/chapter56/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter56/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter56/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter56/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter56/sim.py)  ·  [view in browser](assets/simulations/chapter56/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter56/sim.py
-```
-
-A browser version is available at [`browser/chapter56/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter56/index.html)  ·  [run live](assets/browser/chapter56/index.html).
+Source: [`browser/chapter56/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter56/index.html)  ·  [run live](assets/browser/chapter56/index.html).
 
 ## Exercises
 

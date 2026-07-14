@@ -452,7 +452,7 @@ Before we name anything, ask yourself:
 
 We build a minimal `{ch['key']}` model in Python.
 
-Source: [`python/{chapter_dir(i)}/main.py`]({GITHUB_BASE}/python/{chapter_dir(i)}/main.py)  ·  [view in browser](assets/simulations/{chapter_dir(i)}/sim.py)
+Source: [`python/{chapter_dir(i)}/main.py`]({GITHUB_BASE}/python/{chapter_dir(i)}/main.py)
 
 Run the implementation:
 
@@ -462,15 +462,9 @@ python python/{chapter_dir(i)}/main.py
 
 ## Simulation
 
-Source: [`simulations/{chapter_dir(i)}/sim.py`]({GITHUB_BASE}/simulations/{chapter_dir(i)}/sim.py)  ·  [view in browser](assets/simulations/{chapter_dir(i)}/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/{chapter_dir(i)}/sim.py
-```
-
-A browser version is available at [`browser/{chapter_dir(i)}/index.html`]({GITHUB_BASE}/browser/{chapter_dir(i)}/index.html)  ·  [run live](assets/browser/{chapter_dir(i)}/index.html).
+Source: [`browser/{chapter_dir(i)}/index.html`]({GITHUB_BASE}/browser/{chapter_dir(i)}/index.html)  ·  [run live](assets/browser/{chapter_dir(i)}/index.html).
 
 ## Exercises
 
@@ -504,8 +498,7 @@ def generate_discoveries(chapters):
 - **Key idea:** {ch['idea']}
 - **Python:** [`python/{chapter_dir(i)}/main.py`]({GITHUB_BASE}/python/{chapter_dir(i)}/main.py)
 - **C++:** [`cpp/{chapter_dir(i)}/main.cpp`]({GITHUB_BASE}/cpp/{chapter_dir(i)}/main.cpp)
-- **Simulation:** [`simulations/{chapter_dir(i)}/sim.py`]({GITHUB_BASE}/simulations/{chapter_dir(i)}/sim.py)
-- **Browser sim:** [`browser/{chapter_dir(i)}/index.html`]({GITHUB_BASE}/browser/{chapter_dir(i)}/index.html)
+- **Simulation:** [`browser/{chapter_dir(i)}/index.html`]({GITHUB_BASE}/browser/{chapter_dir(i)}/index.html)
 - **Continue:** {continue_link}
 """
         path.write_text(content, encoding="utf-8")
@@ -561,35 +554,6 @@ def generate_browser_stubs(chapters):
         d.mkdir(exist_ok=True)
         path = d / "index.html"
         path.write_text(browser_sims.get_simulation_html(i, ch['title'], ch['idea']), encoding="utf-8")
-
-
-def generate_simulations(chapters):
-    sim_root = ROOT / "simulations"
-    sim_root.mkdir(exist_ok=True)
-    for i, ch in enumerate(chapters, start=1):
-        d = sim_root / chapter_dir(i)
-        d.mkdir(exist_ok=True)
-        readme = d / "README.md"
-        readme.write_text(
-            f"# {ch['title']} — Simulation\n\n"
-            f"Run `python sim.py` to launch the chapter simulation.\n",
-            encoding="utf-8",
-        )
-        sim = d / "sim.py"
-        content = f"""#!/usr/bin/env python3
-\"\"\"{ch['title']} — simulation stub.\"\"\"
-
-
-def run():
-    print("Chapter {i:02d}: {ch['title']}")
-    print("Implement the simulation for this discovery here.")
-    print("Key idea: {ch['idea']}")
-
-
-if __name__ == "__main__":
-    run()
-"""
-        sim.write_text(content, encoding="utf-8")
 
 
 def generate_mkdocs_nav(chapters):
@@ -716,22 +680,11 @@ Every discovery must answer:
 
 
 def generate_asset_links(chapters):
-    """Create symlinks under docs/assets/ so MkDocs serves sim/browser files."""
-    assets_sim = ROOT / "docs" / "assets" / "simulations"
+    """Create symlinks under docs/assets/ so MkDocs serves browser files."""
     assets_browser = ROOT / "docs" / "assets" / "browser"
-    assets_sim.mkdir(parents=True, exist_ok=True)
     assets_browser.mkdir(parents=True, exist_ok=True)
     for i, _ch in enumerate(chapters, start=1):
         cdir = chapter_dir(i)
-        # simulations symlink
-        sim_src = ROOT / "simulations" / cdir / "sim.py"
-        sim_link_dir = assets_sim / cdir
-        sim_link_dir.mkdir(parents=True, exist_ok=True)
-        sim_link = sim_link_dir / "sim.py"
-        if sim_link.exists() or sim_link.is_symlink():
-            sim_link.unlink()
-        sim_link.symlink_to(os.path.relpath(sim_src, sim_link_dir))
-        # browser symlink
         browser_src = ROOT / "browser" / cdir / "index.html"
         browser_link_dir = assets_browser / cdir
         browser_link_dir.mkdir(parents=True, exist_ok=True)
@@ -747,7 +700,6 @@ def main():
     generate_python_stubs(CHAPTER_SEEDS)
     generate_cpp_stubs(CHAPTER_SEEDS)
     generate_browser_stubs(CHAPTER_SEEDS)
-    generate_simulations(CHAPTER_SEEDS)
     generate_mkdocs_nav(CHAPTER_SEEDS)
     generate_roadmap(CHAPTER_SEEDS)
     generate_index(CHAPTER_SEEDS)

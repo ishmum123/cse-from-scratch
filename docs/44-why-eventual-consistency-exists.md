@@ -20,7 +20,7 @@ Eventual consistency accepts temporary divergence in exchange for availability a
 
 We build a minimal `eventual consistency` model in Python.
 
-Source: [`python/chapter44/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter44/main.py)  ·  [view in browser](assets/simulations/chapter44/sim.py)
+Source: [`python/chapter44/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter44/main.py)
 
 Run the implementation:
 
@@ -30,15 +30,9 @@ python python/chapter44/main.py
 
 ## Simulation
 
-Source: [`simulations/chapter44/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter44/sim.py)  ·  [view in browser](assets/simulations/chapter44/sim.py)
+The simulation runs in the browser so you can interact with it directly.
 
-Run the chapter simulation:
-
-```bash
-python simulations/chapter44/sim.py
-```
-
-A browser version is available at [`browser/chapter44/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter44/index.html)  ·  [run live](assets/browser/chapter44/index.html).
+Source: [`browser/chapter44/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter44/index.html)  ·  [run live](assets/browser/chapter44/index.html).
 
 ## Exercises
 
