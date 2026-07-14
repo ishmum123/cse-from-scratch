@@ -4,20 +4,52 @@
 
 Recurrent models forget and cannot train in parallel.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Transformers Scale' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Transformers Scale', then measure where it breaks.
+## Discovery
 
----
+Transformers replace recurrence with self-attention, enabling parallel training over whole sequences.
+
+## Implementation
+
+We build a minimal `transformer` model in Python.
+
+Source: [`python/chapter55/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter55/main.py)  ·  [view in browser](assets/simulations/chapter55/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter55/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter55/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter55/sim.py)  ·  [view in browser](assets/simulations/chapter55/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter55/sim.py
+```
+
+A browser version is available at [`browser/chapter55/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter55/index.html)  ·  [run live](assets/browser/chapter55/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Transformers Scale' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `transformer` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why KV Cache Exists**
+**Continue → [Why KV Cache Exists](56-why-kv-cache-exists.md)**

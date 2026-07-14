@@ -4,20 +4,52 @@
 
 Generating one token at a time recomputes the same keys and values.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'KV Cache' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'KV Cache', then measure where it breaks.
+## Discovery
 
----
+The KV cache stores past key/value tensors so autoregressive generation only computes the new token.
+
+## Implementation
+
+We build a minimal `kv cache` model in Python.
+
+Source: [`python/chapter56/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter56/main.py)  ·  [view in browser](assets/simulations/chapter56/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter56/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter56/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter56/sim.py)  ·  [view in browser](assets/simulations/chapter56/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter56/sim.py
+```
+
+A browser version is available at [`browser/chapter56/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter56/index.html)  ·  [run live](assets/browser/chapter56/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'KV Cache' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `kv cache` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why Quantization Exists**
+**Continue → [Why Quantization Exists](57-why-quantization-exists.md)**

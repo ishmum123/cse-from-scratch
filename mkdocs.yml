@@ -43,7 +43,7 @@ nav:
   - Part VI — Databases:
       - Why Files Aren't Enough: 29-why-files-arent-enough.md
       - Why Indexes Exist: 30-why-indexes-exist.md
-      - Why B-Trees Won: 31-why-btrees-won.md
+      - Why B-Trees Won: 31-why-b-trees-won.md
       - Why Transactions Exist: 32-why-transactions-exist.md
       - Why MVCC Exists: 33-why-mvcc-exists.md
       - Why Query Planners Matter: 34-why-query-planners-matter.md

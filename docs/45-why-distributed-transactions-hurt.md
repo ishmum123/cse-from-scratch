@@ -2,22 +2,54 @@
 
 ## The Problem
 
-A crash in the middle of an update leaves data half-changed.
+Distributed transactions stall when one node hesitates.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Distributed Transactions Hurt' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Distributed Transactions Hurt', then measure where it breaks.
+## Discovery
 
----
+Two-phase commit and sagas trade strong consistency for coordination overhead and fragility.
+
+## Implementation
+
+We build a minimal `distributed transaction` model in Python.
+
+Source: [`python/chapter45/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter45/main.py)  ·  [view in browser](assets/simulations/chapter45/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter45/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter45/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter45/sim.py)  ·  [view in browser](assets/simulations/chapter45/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter45/sim.py
+```
+
+A browser version is available at [`browser/chapter45/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter45/index.html)  ·  [run live](assets/browser/chapter45/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Distributed Transactions Hurt' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `distributed transaction` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why Caches Exist**
+**Continue → [Why Caches Exist](46-why-caches-exist.md)**

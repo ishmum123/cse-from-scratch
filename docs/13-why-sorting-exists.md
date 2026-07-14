@@ -4,20 +4,52 @@
 
 Data arrives messy, and every later step assumes order.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Sorting' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Sorting', then measure where it breaks.
+## Discovery
 
----
+Sorting arranges data so that searching, merging, and scanning become simple and predictable.
+
+## Implementation
+
+We build a minimal `sort` model in Python.
+
+Source: [`python/chapter13/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter13/main.py)  ·  [view in browser](assets/simulations/chapter13/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter13/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter13/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter13/sim.py)  ·  [view in browser](assets/simulations/chapter13/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter13/sim.py
+```
+
+A browser version is available at [`browser/chapter13/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter13/index.html)  ·  [run live](assets/browser/chapter13/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Sorting' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `sort` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why Divide and Conquer Works**
+**Continue → [Why Divide and Conquer Works](14-why-divide-and-conquer-works.md)**

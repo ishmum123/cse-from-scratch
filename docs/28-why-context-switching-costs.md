@@ -4,20 +4,52 @@
 
 Switching between tasks costs more than the tasks themselves.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Context Switching Costs' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Context Switching Costs', then measure where it breaks.
+## Discovery
 
----
+Saving and restoring registers, caches, and TLB state makes switching expensive.
+
+## Implementation
+
+We build a minimal `context switch` model in Python.
+
+Source: [`python/chapter28/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter28/main.py)  ·  [view in browser](assets/simulations/chapter28/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter28/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter28/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter28/sim.py)  ·  [view in browser](assets/simulations/chapter28/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter28/sim.py
+```
+
+A browser version is available at [`browser/chapter28/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter28/index.html)  ·  [run live](assets/browser/chapter28/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Context Switching Costs' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `context switch` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why Files Aren't Enough**
+**Continue → [Why Files Aren't Enough](29-why-files-arent-enough.md)**

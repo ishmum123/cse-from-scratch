@@ -4,20 +4,52 @@
 
 Programs expect memory that does not exist.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Virtual Memory' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Virtual Memory', then measure where it breaks.
+## Discovery
 
----
+Virtual memory maps program addresses to physical pages, enabling isolation and swapping.
+
+## Implementation
+
+We build a minimal `virtual memory` model in Python.
+
+Source: [`python/chapter27/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter27/main.py)  ·  [view in browser](assets/simulations/chapter27/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter27/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter27/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter27/sim.py)  ·  [view in browser](assets/simulations/chapter27/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter27/sim.py
+```
+
+A browser version is available at [`browser/chapter27/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter27/index.html)  ·  [run live](assets/browser/chapter27/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Virtual Memory' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `virtual memory` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why Context Switching Costs**
+**Continue → [Why Context Switching Costs](28-why-context-switching-costs.md)**

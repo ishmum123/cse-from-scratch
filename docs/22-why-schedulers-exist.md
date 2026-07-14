@@ -4,20 +4,52 @@
 
 Every process wants the CPU at the same time.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Schedulers' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Schedulers', then measure where it breaks.
+## Discovery
 
----
+A scheduler decides who runs next, balancing fairness, latency, and throughput.
+
+## Implementation
+
+We build a minimal `scheduler` model in Python.
+
+Source: [`python/chapter22/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter22/main.py)  ·  [view in browser](assets/simulations/chapter22/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter22/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter22/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter22/sim.py)  ·  [view in browser](assets/simulations/chapter22/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter22/sim.py
+```
+
+A browser version is available at [`browser/chapter22/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter22/index.html)  ·  [run live](assets/browser/chapter22/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Schedulers' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `scheduler` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why Processes Exist**
+**Continue → [Why Processes Exist](23-why-processes-exist.md)**

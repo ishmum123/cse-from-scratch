@@ -4,20 +4,52 @@
 
 The database is fast, but the network to reach it is slow.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Caches' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Caches', then measure where it breaks.
+## Discovery
 
----
+Caches keep hot data close to consumers, trading freshness for speed.
+
+## Implementation
+
+We build a minimal `cache` model in Python.
+
+Source: [`python/chapter46/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter46/main.py)  ·  [view in browser](assets/simulations/chapter46/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter46/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter46/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter46/sim.py)  ·  [view in browser](assets/simulations/chapter46/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter46/sim.py
+```
+
+A browser version is available at [`browser/chapter46/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter46/index.html)  ·  [run live](assets/browser/chapter46/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Caches' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `cache` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why CDNs Exist**
+**Continue → [Why CDNs Exist](47-why-cdns-exist.md)**

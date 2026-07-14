@@ -4,20 +4,52 @@
 
 Users type vague words and expect instant, ranked results.
 
-## Challenge
+## Thinking
 
-Implement the smallest program that demonstrates 'Search Engines' before reading the solution.
+Before we name anything, ask yourself:
 
-## Exercise
+- What would happen if the missing piece were absent?
+- What is the simplest system that could show this effect?
+- Can you draw the interaction before reading the answer?
 
-Write a minimal implementation of 'Search Engines', then measure where it breaks.
+## Discovery
 
----
+Search engines index, tokenize, and score documents to answer free-text queries.
+
+## Implementation
+
+We build a minimal `search engine` model in Python.
+
+Source: [`python/chapter51/main.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter51/main.py)  ·  [view in browser](assets/simulations/chapter51/sim.py)
+
+Run the implementation:
+
+```bash
+python python/chapter51/main.py
+```
+
+## Simulation
+
+Source: [`simulations/chapter51/sim.py`](https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter51/sim.py)  ·  [view in browser](assets/simulations/chapter51/sim.py)
+
+Run the chapter simulation:
+
+```bash
+python simulations/chapter51/sim.py
+```
+
+A browser version is available at [`browser/chapter51/index.html`](https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter51/index.html)  ·  [run live](assets/browser/chapter51/index.html).
+
+## Exercises
+
+1. Change one parameter in the simulation and predict what will happen.
+2. Draw the system before and after the discovery.
+3. Name one real-world system that depends on this idea and one way it can fail.
 
 ## Engineering Notes
 
-This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Search Engines' as a fact, but as a response to pressure.
+Real systems add noise, latency, and limits. The model we built is the simplest version; real `search engine` designs trade correctness, performance, and maintainability.
 
 ---
 
-**Continue → Why GPUs Changed Everything**
+**Continue → [Why GPUs Changed Everything](52-why-gpus-changed-everything.md)**
