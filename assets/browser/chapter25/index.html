@@ -2,30 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Locks Exist</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Locks Exist</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Two threads increment a counter. Without a lock, updates are lost.</p><div class="controls"><button id="race">Run without lock</button><button id="locked">Run with lock</button><button id="reset">Reset</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">A lock serializes access to shared state.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+let counter = 0;
+let locked = false;
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+function draw(msg) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = locked ? '#fff9c4' : '#e3f2fd'; ctx.fillRect(220, 60, 160, 80); ctx.strokeRect(220, 60, 160, 80);
+  ctx.fillStyle = '#333'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Counter: ${counter}`, 300, 100);
+  ctx.font = '14px sans-serif'; ctx.fillText(locked ? 'LOCK HELD' : 'lock free', 300, 125);
+  document.getElementById('status').textContent = msg;
 }
-draw();
+function increment(n, useLock) {
+  for (let i = 0; i < n; i++) {
+    if (useLock) { if (locked) { i--; continue; } locked = true; }
+    const temp = counter;
+    temp++; // simulated interleaving
+    counter = temp;
+    if (useLock) locked = false;
+  }
+}
+document.getElementById('race').onclick = () => { counter = 0; increment(1000, false); increment(1000, false); draw(`Race result: ${counter} (expected 2000)`); };
+document.getElementById('locked').onclick = () => { counter = 0; increment(1000, true); draw(`Locked result: ${counter}`); };
+document.getElementById('reset').onclick = () => { counter = 0; draw('Reset.'); };
+draw('Press a button to compare.');
+
 </script>
 </body>
 </html>

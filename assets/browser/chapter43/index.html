@@ -2,30 +2,43 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Raft Works</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Raft Works</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Hold a leader election among three nodes.</p><div class="controls"><button id="elect">Start election</button><button id="reset">Reset</button></div><canvas id="c" width="500" height="220"></canvas><div id="status">Raft elects one leader to coordinate log replication.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const nodes = [{id:1,state:'follower'},{id:2,state:'follower'},{id:3,state:'follower'}];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  nodes.forEach((n, i) => {
+    const color = n.state === 'leader' ? '#c8e6c9' : (n.state === 'candidate' ? '#ffcc80' : '#e3f2fd');
+    ctx.fillStyle = color; ctx.fillRect(60 + i * 140, 80, 100, 80); ctx.strokeRect(60 + i * 140, 80, 100, 80);
+    ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Node ${n.id}`, 110 + i * 140, 110); ctx.fillText(n.state, 110 + i * 140, 140);
+  });
 }
+document.getElementById('elect').onclick = () => {
+  nodes.forEach(n => n.state = 'candidate');
+  const leader = Math.floor(Math.random() * 3);
+  nodes[leader].state = 'leader';
+  nodes.forEach((n, i) => { if (i !== leader) n.state = 'follower'; });
+  document.getElementById('status').textContent = `Node ${leader+1} became leader.`;
+  draw();
+};
+document.getElementById('reset').onclick = () => { nodes.forEach(n => n.state = 'follower'); draw(); };
 draw();
+
 </script>
 </body>
 </html>

@@ -2,30 +2,41 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Recursion Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Recursion Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Draw a recursive tree by repeatedly splitting branches.</p><div class="controls"><button id="draw">Draw tree</button><input id="depth" type="range" min="1" max="8" value="5"></div><canvas id="c" width="600" height="300"></canvas><div id="status">Each branch calls itself with a smaller problem.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
+function branch(x, y, len, angle, depth) {
+  if (depth === 0) return;
+  const x2 = x + len * Math.cos(angle);
+  const y2 = y + len * Math.sin(angle);
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke();
+  branch(x2, y2, len * 0.7, angle - 0.4, depth - 1);
+  branch(x2, y2, len * 0.7, angle + 0.4, depth - 1);
+}
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  const d = parseInt(document.getElementById('depth').value);
+  branch(canvas.width / 2, canvas.height - 20, 60, -Math.PI / 2, d);
+  document.getElementById('status').textContent = `Recursion depth: ${d}`;
 }
+document.getElementById('draw').onclick = draw;
+document.getElementById('depth').oninput = draw;
 draw();
+
 </script>
 </body>
 </html>

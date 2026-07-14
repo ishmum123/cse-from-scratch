@@ -2,30 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why TCP Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why TCP Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Send packets with sequence numbers. Lost packets are retransmitted.</p><div class="controls"><button id="send">Send with loss</button></div><canvas id="c" width="600" height="220"></canvas><div id="status">TCP uses sequence numbers and ACKs to recover from loss.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+let packets = [{seq:1,sent:false,lost:false,acked:false},{seq:2,sent:false,lost:true,acked:false},{seq:3,sent:false,lost:false,acked:false}];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('Sender', 40, 30); ctx.fillText('Receiver', 480, 30);
+  packets.forEach((p, i) => {
+    const x = p.sent ? (p.lost ? 280 : 520) : 50;
+    const y = 70 + i * 40;
+    ctx.fillStyle = p.lost ? '#ffcdd2' : (p.acked ? '#c8e6c9' : '#90caf9');
+    ctx.fillRect(x, y, 50, 26); ctx.strokeRect(x, y, 50, 26);
+    ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`seq ${p.seq}`, x + 25, y + 17);
+  });
 }
+async function send() {
+  packets.forEach(p => { p.sent = false; p.acked = false; });
+  for (let p of packets) {
+    p.sent = true;
+    draw();
+    await new Promise(r => setTimeout(r, 400));
+    if (p.lost) { document.getElementById('status').textContent = `Packet ${p.seq} lost. Retransmitting...`; await new Promise(r => setTimeout(r, 600)); p.lost = false; }
+    p.acked = true;
+    draw();
+    await new Promise(r => setTimeout(r, 300));
+  }
+  document.getElementById('status').textContent = 'All packets acknowledged.';
+}
+document.getElementById('send').onclick = send;
 draw();
+
 </script>
 </body>
 </html>

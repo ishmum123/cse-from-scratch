@@ -2,30 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Queues Exist</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Queues Exist</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Enqueue and dequeue items fairly.</p><div class="controls"><input id="val" type="text" placeholder="Value"><button id="enqueue">Enqueue</button><button id="dequeue">Dequeue</button></div><canvas id="c" width="600" height="160"></canvas><div id="status">Queue is FIFO: first in, first out.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const q = [];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  q.forEach((v, i) => {
+    ctx.fillStyle = '#c8e6c9'; ctx.fillRect(20 + i * 70, 50, 60, 50); ctx.strokeRect(20 + i * 70, 50, 60, 50);
+    ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(v, 50 + i * 70, 80);
+  });
 }
+document.getElementById('enqueue').onclick = () => { const v = document.getElementById('val').value; if (v && q.length < 8) q.push(v); draw(); };
+document.getElementById('dequeue').onclick = () => { if (q.length) { const v = q.shift(); document.getElementById('status').textContent = `Dequeued: ${v}`; } draw(); };
 draw();
+
 </script>
 </body>
 </html>

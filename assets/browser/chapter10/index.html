@@ -2,30 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Trees Exist</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Trees Exist</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Insert values into a binary search tree and watch the structure grow.</p><div class="controls"><input id="val" type="number" placeholder="Value"><button id="insert">Insert</button><button id="reset">Reset</button></div><canvas id="c" width="700" height="300"></canvas><div id="status">Insert values to build a BST.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+class Node { constructor(v) { this.v = v; this.l = null; this.r = null; this.x = 0; this.y = 0; } }
+let root = null;
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
-}
+function insert(v) { if (!root) { root = new Node(v); return; } let n = root; while (true) { if (v < n.v) { if (!n.l) { n.l = new Node(v); return; } n = n.l; } else { if (!n.r) { n.r = new Node(v); return; } n = n.r; } } }
+function layout(n, x, y, gap) { if (!n) return; n.x = x; n.y = y; layout(n.l, x - gap, y + 50, gap / 2); layout(n.r, x + gap, y + 50, gap / 2); }
+function drawNode(n) { if (!n) return; if (n.l) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.l.x, n.l.y); ctx.stroke(); drawNode(n.l); } if (n.r) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.r.x, n.r.y); ctx.stroke(); drawNode(n.r); } ctx.beginPath(); ctx.arc(n.x, n.y, 18, 0, Math.PI*2); ctx.fillStyle = '#e3f2fd'; ctx.fill(); ctx.stroke(); ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(n.v, n.x, n.y + 5); }
+function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); layout(root, canvas.width/2, 40, 160); drawNode(root); }
+document.getElementById('insert').onclick = () => { const v = parseInt(document.getElementById('val').value); if (!isNaN(v)) insert(v); document.getElementById('status').textContent = `Inserted ${v}. Tree height grows with order of insertion.`; draw(); };
+document.getElementById('reset').onclick = () => { root = null; document.getElementById('status').textContent = 'Tree cleared.'; draw(); };
+[30, 15, 45, 7, 22, 38, 60].forEach(insert);
 draw();
+
 </script>
 </body>
 </html>

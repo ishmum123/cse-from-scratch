@@ -2,30 +2,39 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Virtual Memory Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Virtual Memory Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Map virtual pages to physical frames.</p><div class="controls"><button id="map">Map page 2 to frame 5</button><button id="reset">Reset</button></div><canvas id="c" width="600" height="260"></canvas><div id="status">Virtual addresses are translated to physical addresses.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const pages = Array(8).fill(null);
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('Virtual pages', 80, 30); ctx.fillText('Physical frames', 380, 30);
+  pages.forEach((f, i) => {
+    ctx.fillStyle = f !== null ? '#c8e6c9' : '#e3f2fd'; ctx.fillRect(60, 45 + i * 25, 140, 22); ctx.strokeRect(60, 45 + i * 25, 140, 22);
+    ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`page ${i}`, 130, 61 + i * 25);
+    ctx.fillStyle = '#e3f2fd'; ctx.fillRect(360, 45 + i * 25, 140, 22); ctx.strokeRect(360, 45 + i * 25, 140, 22);
+    ctx.fillStyle = '#333'; ctx.fillText(`frame ${i}`, 430, 61 + i * 25);
+    if (f !== null) { ctx.beginPath(); ctx.moveTo(200, 56 + i * 25); ctx.lineTo(360, 56 + f * 25); ctx.strokeStyle = '#ef5350'; ctx.stroke(); ctx.strokeStyle = '#000'; }
+  });
 }
+document.getElementById('map').onclick = () => { pages[2] = 5; document.getElementById('status').textContent = 'Virtual page 2 now maps to physical frame 5.'; draw(); };
+document.getElementById('reset').onclick = () => { pages.fill(null); draw(); };
 draw();
+
 </script>
 </body>
 </html>

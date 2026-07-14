@@ -2,30 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Looking Is Slow</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Looking Is Slow</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Search for a target value one item at a time.</p><div class="controls"><input id="target" type="number" placeholder="Target" value="42"><button id="search">Search</button></div><canvas id="c" width="700" height="150"></canvas><div id="status">Enter a target and search.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const arr = Array.from({length: 12}, () => Math.floor(Math.random() * 100));
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+function draw(hi=-1, found=false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  arr.forEach((v, i) => {
+    ctx.fillStyle = i === hi ? (found ? '#66bb6a' : '#ffcc80') : '#e3f2fd';
+    ctx.fillRect(10 + i * 57, 40, 50, 50);
+    ctx.strokeRect(10 + i * 57, 40, 50, 50);
+    ctx.fillStyle = '#333';
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(v, 35 + i * 57, 70);
+  });
 }
+async function search() {
+  const t = parseInt(document.getElementById('target').value);
+  for (let i = 0; i < arr.length; i++) {
+    draw(i, arr[i] === t);
+    document.getElementById('status').textContent = `Checking index ${i}...`;
+    await new Promise(r => setTimeout(r, 300));
+    if (arr[i] === t) { document.getElementById('status').textContent = `Found ${t} at index ${i}.`; return; }
+  }
+  document.getElementById('status').textContent = `${t} not found.`;
+}
+document.getElementById('search').onclick = search;
 draw();
+
 </script>
 </body>
 </html>

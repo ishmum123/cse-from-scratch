@@ -2,30 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Packets Exist</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Packets Exist</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Split a large message into packets and reassemble at the destination.</p><div class="controls"><button id="split">Split & send</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Packets travel independently and are reassembled.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const msg = ['H','e','l','l','o'];
+let packets = [];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('Source', 30, 30); ctx.fillText('Destination', 480, 30);
+  packets.forEach((p, i) => {
+    ctx.fillStyle = '#90caf9'; ctx.fillRect(p.x, 80 + i * 20, 30, 16); ctx.strokeRect(p.x, 80 + i * 20, 30, 16);
+    ctx.fillStyle = '#333'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(p.ch, p.x + 15, 92 + i * 20);
+  });
 }
+async function split() {
+  packets = msg.map((ch, i) => ({ch, x: 30, y: 80 + i * 20}));
+  draw();
+  for (let i = 0; i < packets.length; i++) {
+    for (let x = 30; x <= 480; x += 10) { packets[i].x = x; draw(); await new Promise(r => setTimeout(r, 20)); }
+  }
+  document.getElementById('status').textContent = 'Message reassembled: ' + msg.join('');
+}
+document.getElementById('split').onclick = split;
 draw();
+
 </script>
 </body>
 </html>

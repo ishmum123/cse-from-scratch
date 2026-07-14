@@ -2,30 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Sharding Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Sharding Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Route records to shards by key hash.</p><div class="controls"><input id="key" type="text" value="user123"><button id="route">Route</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Sharding partitions data by key across nodes.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+function hash(s) { let h = 0; for (let c of s) h = (h * 31 + c.charCodeAt(0)) % 3; return h; }
+function draw(shard=-1) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = i === shard ? '#ffcc80' : '#e3f2fd';
+    ctx.fillRect(60 + i * 180, 70, 140, 100); ctx.strokeRect(60 + i * 180, 70, 140, 100);
+    ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Shard ${i}`, 130 + i * 180, 115);
+  }
 }
+document.getElementById('route').onclick = () => {
+  const k = document.getElementById('key').value;
+  const s = hash(k);
+  document.getElementById('status').textContent = `Key "${k}" routes to shard ${s}.`;
+  draw(s);
+};
 draw();
+
 </script>
 </body>
 </html>

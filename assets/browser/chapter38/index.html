@@ -2,30 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Congestion Happens</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Congestion Happens</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Increase the sending window until packets drop, then back off.</p><div class="controls"><button id="step">Step</button><button id="reset">Reset</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Congestion control probes for available bandwidth.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+let window = 1;
+let drops = 0;
+const capacity = 8;
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = '#e0e0e0'; ctx.fillRect(50, 140, 500, 30);
+  ctx.fillStyle = window > capacity ? '#ef5350' : '#90caf9'; ctx.fillRect(50, 140, Math.min(window, capacity) / capacity * 500, 30); ctx.strokeRect(50, 140, 500, 30);
+  ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`Window: ${window}`, 50, 80); ctx.fillText(`Capacity: ${capacity}`, 50, 105); ctx.fillText(`Drops: ${drops}`, 50, 130);
 }
+document.getElementById('step').onclick = () => {
+  if (window > capacity) { drops++; window = Math.max(1, Math.floor(window / 2)); }
+  else window++;
+  draw();
+};
+document.getElementById('reset').onclick = () => { window = 1; drops = 0; draw(); };
 draw();
+
 </script>
 </body>
 </html>

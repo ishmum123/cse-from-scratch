@@ -2,30 +2,48 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Hashing Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Hashing Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Map keys to buckets with a hash function. Watch collisions occur.</p><div class="controls"><input id="key" type="text" placeholder="Key"><button id="insert">Insert</button><button id="reset">Reset</button></div><canvas id="c" width="700" height="260"></canvas><div id="status">Type a key and insert it into the hash table.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const buckets = Array(8).fill(0).map(() => []);
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+function hash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % buckets.length; return h; }
+function draw(hi=-1) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  buckets.forEach((b, i) => {
+    ctx.fillStyle = i === hi ? '#ffcc80' : '#e8f5e9';
+    ctx.fillRect(20, 20 + i * 28, 80, 24);
+    ctx.strokeRect(20, 20 + i * 28, 80, 24);
+    ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`bucket ${i}`, 60, 37 + i * 28);
+    b.forEach((k, j) => {
+      ctx.fillStyle = '#90caf9'; ctx.fillRect(110 + j * 70, 20 + i * 28, 65, 24); ctx.strokeRect(110 + j * 28, 20 + i * 28, 65, 24);
+      ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(k, 142 + j * 70, 37 + i * 28);
+    });
+  });
 }
+document.getElementById('insert').onclick = () => {
+  const k = document.getElementById('key').value || 'key';
+  const h = hash(k);
+  buckets[h].push(k);
+  document.getElementById('status').textContent = `Hash("${k}") = ${h}. Collisions: ${buckets[h].length > 1 ? 'yes' : 'no'}.`;
+  draw(h);
+};
+document.getElementById('reset').onclick = () => { buckets.forEach(b => b.length = 0); draw(); };
 draw();
+
 </script>
 </body>
 </html>

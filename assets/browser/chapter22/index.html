@@ -2,30 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Schedulers Exist</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Schedulers Exist</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Run tasks with round-robin scheduling.</p><div class="controls"><button id="step">Step</button><button id="reset">Reset</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Scheduler shares CPU time among tasks.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const tasks = [{name:'A',work:5},{name:'B',work:3},{name:'C',work:4}];
+let current = 0;
+const quantum = 1;
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  tasks.forEach((t, i) => {
+    ctx.fillStyle = i === current ? '#ffcc80' : '#e3f2fd';
+    ctx.fillRect(40 + i * 180, 40, 120, 100);
+    ctx.strokeRect(40 + i * 180, 40, 120, 100);
+    ctx.fillStyle = '#333'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t.name, 100 + i * 180, 80);
+    ctx.font = '16px sans-serif'; ctx.fillText(`work: ${t.work}`, 100 + i * 180, 110);
+  });
 }
+document.getElementById('step').onclick = () => {
+  if (tasks.every(t => t.work <= 0)) { document.getElementById('status').textContent = 'All tasks complete.'; return; }
+  while (tasks[current].work <= 0) current = (current + 1) % tasks.length;
+  tasks[current].work -= quantum;
+  document.getElementById('status').textContent = `Ran task ${tasks[current].name} for ${quantum} unit.`;
+  current = (current + 1) % tasks.length;
+  draw();
+};
+document.getElementById('reset').onclick = () => { tasks[0].work=5; tasks[1].work=3; tasks[2].work=4; current=0; draw(); };
 draw();
+
 </script>
 </body>
 </html>

@@ -2,30 +2,41 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Transformers Scale</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Transformers Scale</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Process all tokens in parallel instead of one by one.</p><div class="controls"><button id="parallel">Parallel pass</button><button id="serial">Serial pass</button></div><canvas id="c" width="600" height="160"></canvas><div id="status">Transformers replace recurrence with parallel self-attention.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const tokens = ['t1','t2','t3','t4','t5'];
+let highlights = [];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  tokens.forEach((t, i) => {
+    ctx.fillStyle = highlights.includes(i) ? '#66bb6a' : '#e3f2fd';
+    ctx.fillRect(60 + i * 100, 50, 70, 50); ctx.strokeRect(60 + i * 100, 50, 70, 50);
+    ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t, 95 + i * 100, 80);
+  });
 }
+async function parallel() { highlights = tokens.map((_,i)=>i); draw(); document.getElementById('status').textContent = 'All tokens processed in parallel.'; }
+async function serial() {
+  for (let i = 0; i < tokens.length; i++) { highlights = [i]; draw(); document.getElementById('status').textContent = `Processing token ${i+1}/${tokens.length}...`; await new Promise(r => setTimeout(r, 300)); }
+}
+document.getElementById('parallel').onclick = parallel;
+document.getElementById('serial').onclick = serial;
 draw();
+
 </script>
 </body>
 </html>

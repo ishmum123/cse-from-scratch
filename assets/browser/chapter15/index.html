@@ -2,30 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Dynamic Programming Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Dynamic Programming Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Compute Fibonacci with and without memoization.</p><div class="controls"><input id="n" type="number" value="8" min="1" max="15" style="width:60px"><button id="naive">Naive recursion</button><button id="memo">Memoized</button></div><canvas id="c" width="700" height="280"></canvas><div id="status">Memoization avoids recomputing the same sub-problems.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+let calls = 0;
+function fib(n) { calls++; if (n <= 1) return n; return fib(n-1) + fib(n-2); }
+function fibMemo(n, m={}) { calls++; if (n <= 1) return n; if (m[n]) return m[n]; m[n] = fibMemo(n-1, m) + fibMemo(n-2, m); return m[n]; }
+function draw(n, mode) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`fib(${n}) using ${mode}`, 20, 30);
+  ctx.fillText(`Recursive calls: ${calls}`, 20, 60);
+  ctx.fillText(`Result: ${mode === 'memo' ? fibMemo(n) : fib(n)}`, 20, 90);
 }
-draw();
+document.getElementById('naive').onclick = () => { calls = 0; const n = parseInt(document.getElementById('n').value); draw(n, 'naive'); };
+document.getElementById('memo').onclick = () => { calls = 0; const n = parseInt(document.getElementById('n').value); draw(n, 'memo'); };
+
 </script>
 </body>
 </html>

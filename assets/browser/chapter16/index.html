@@ -2,30 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Greedy Sometimes Works</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Greedy Sometimes Works</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Make change with the largest coin first. Does it always work?</p><div class="controls"><input id="amount" type="number" value="37" style="width:80px"><button id="greedy">Greedy change</button></div><canvas id="c" width="600" height="180"></canvas><div id="status">Greedy picks the largest coin that fits.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const coins = [25, 10, 5, 1];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+function makeChange(amount) {
+  const result = [];
+  let remaining = amount;
+  for (const c of coins) { while (remaining >= c) { result.push(c); remaining -= c; } }
+  return result;
 }
-draw();
+function draw(amount) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const change = makeChange(amount);
+  ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`Amount: ${amount}`, 20, 30);
+  change.forEach((c, i) => {
+    ctx.beginPath(); ctx.arc(40 + i * 50, 90, 20, 0, Math.PI*2); ctx.fillStyle = '#ffd54f'; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(c, 40 + i * 50, 95);
+  });
+  ctx.fillText(`Coins used: ${change.length}`, 20, 150);
+}
+document.getElementById('greedy').onclick = () => draw(parseInt(document.getElementById('amount').value));
+draw(37);
+
 </script>
 </body>
 </html>

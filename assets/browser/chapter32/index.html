@@ -2,30 +2,41 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Transactions Exist</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Transactions Exist</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Transfer balance between accounts. A crash mid-update needs rollback.</p><div class="controls"><button id="commit">Commit transfer</button><button id="crash">Simulate crash</button><button id="reset">Reset</button></div><canvas id="c" width="500" height="220"></canvas><div id="status">Transactions commit atomically or roll back.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+let a = 100, b = 50;
+let tempA, tempB;
+let state = 'ready';
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = state === 'crash' ? '#ffcdd2' : '#e3f2fd';
+  ctx.fillRect(60, 50, 140, 100); ctx.strokeRect(60, 50, 140, 100);
+  ctx.fillStyle = state === 'crash' ? '#ffcdd2' : '#e3f2fd';
+  ctx.fillRect(300, 50, 140, 100); ctx.strokeRect(300, 50, 140, 100);
+  ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Account A', 130, 85); ctx.fillText(state === 'crash' ? a : a, 130, 115);
+  ctx.fillText('Account B', 370, 85); ctx.fillText(state === 'crash' ? b : b, 370, 115);
+  ctx.font = '12px sans-serif'; ctx.fillText(state === 'crash' ? 'rolled back' : 'committed', 250, 180);
 }
+document.getElementById('commit').onclick = () => { a -= 20; b += 20; state = 'committed'; draw(); };
+document.getElementById('crash').onclick = () => { state = 'crash'; draw(); };
+document.getElementById('reset').onclick = () => { a = 100; b = 50; state = 'ready'; draw(); };
 draw();
+
 </script>
 </body>
 </html>

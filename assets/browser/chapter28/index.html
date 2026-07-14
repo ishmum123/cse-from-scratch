@@ -2,30 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Context Switching Costs</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Context Switching Costs</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Save one task state, restore another. More state means more cost.</p><div class="controls"><button id="switch">Context switch</button></div><canvas id="c" width="600" height="220"></canvas><div id="status">Switching means saving and restoring registers, caches, and TLB.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+let active = 0;
+const regs = [['r0:5','r1:3','pc:12'],['r0:9','r1:7','pc:44']];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  regs.forEach((r, i) => {
+    ctx.fillStyle = i === active ? '#ffcc80' : '#e3f2fd';
+    ctx.fillRect(60 + i * 280, 50, 180, 130); ctx.strokeRect(60 + i * 280, 50, 180, 130);
+    ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Task ${i+1}`, 150 + i * 280, 80);
+    r.forEach((line, j) => { ctx.font = '14px sans-serif'; ctx.fillText(line, 150 + i * 280, 105 + j * 22); });
+  });
 }
+async function switchTask() {
+  document.getElementById('status').textContent = 'Saving task ' + (active+1) + ' state...';
+  await new Promise(r => setTimeout(r, 500));
+  active = (active + 1) % 2;
+  document.getElementById('status').textContent = 'Restored task ' + (active+1) + ' state.';
+  draw();
+}
+document.getElementById('switch').onclick = switchTask;
 draw();
+
 </script>
 </body>
 </html>
