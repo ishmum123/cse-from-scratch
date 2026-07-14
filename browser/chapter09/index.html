@@ -2,30 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Binary Search Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Binary Search Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Find the target by repeatedly halving the sorted list.</p><div class="controls"><input id="target" type="number" placeholder="Target" value="42"><button id="search">Binary Search</button></div><canvas id="c" width="700" height="150"></canvas><div id="status">Enter a target and watch the interval shrink.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const arr = [3, 7, 12, 18, 25, 31, 36, 42, 55, 61, 72, 88];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+function draw(lo, hi, mid=-1, found=false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  arr.forEach((v, i) => {
+    ctx.fillStyle = i < lo || i > hi ? '#e0e0e0' : (i === mid ? (found ? '#66bb6a' : '#ef5350') : '#ffcc80');
+    ctx.fillRect(10 + i * 57, 40, 50, 50);
+    ctx.strokeRect(10 + i * 57, 40, 50, 50);
+    ctx.fillStyle = '#333';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(v, 35 + i * 57, 70);
+  });
 }
-draw();
+async function search() {
+  let lo = 0, hi = arr.length - 1;
+  const t = parseInt(document.getElementById('target').value);
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    draw(lo, hi, mid, arr[mid] === t);
+    document.getElementById('status').textContent = `lo=${lo}, mid=${mid}, hi=${hi}; arr[mid]=${arr[mid]}`;
+    await new Promise(r => setTimeout(r, 700));
+    if (arr[mid] === t) { document.getElementById('status').textContent = `Found ${t} at index ${mid}.`; return; }
+    if (arr[mid] < t) lo = mid + 1; else hi = mid - 1;
+  }
+  draw(-1, -1);
+  document.getElementById('status').textContent = `${t} not found.`;
+}
+document.getElementById('search').onclick = search;
+draw(0, arr.length - 1);
+
 </script>
 </body>
 </html>

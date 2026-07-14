@@ -2,30 +2,39 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Quantization Exists</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Quantization Exists</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Reduce precision to save space with small accuracy loss.</p><div class="controls"><input id="bits" type="range" min="1" max="8" value="4"><span id="bitsLabel">4 bits</span></div><canvas id="c" width="500" height="200"></canvas><div id="status">Fewer bits per weight means smaller models.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const weights = [0.12, 0.87, -0.34, 0.56, -0.91, 0.23, 0.45, -0.66];
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
+function quantize(v, bits) { const levels = Math.pow(2, bits) - 1; return Math.round(v * levels) / levels; }
 function draw() {
+  const bits = parseInt(document.getElementById('bits').value);
+  document.getElementById('bitsLabel').textContent = bits + ' bits';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  weights.forEach((w, i) => {
+    const q = quantize(w, bits);
+    ctx.fillStyle = '#90caf9'; ctx.fillRect(40 + i * 55, 100 - w * 80, 40, w * 80); ctx.strokeRect(40 + i * 55, 100 - w * 80, 40, w * 80);
+    ctx.fillStyle = '#ef5350'; ctx.fillRect(40 + i * 55, 100 - q * 80, 40, q * 80);
+    ctx.fillStyle = '#333'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(q.toFixed(2), 60 + i * 55, 140);
+  });
 }
+document.getElementById('bits').oninput = draw;
 draw();
+
 </script>
 </body>
 </html>

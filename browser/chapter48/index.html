@@ -2,30 +2,38 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Queues Exist</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Queues Exist</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Publish messages to a queue; consumers process them at their own pace.</p><div class="controls"><button id="publish">Publish</button><button id="consume">Consume</button></div><canvas id="c" width="600" height="180"></canvas><div id="status">Queues decouple producers and consumers.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const queue = [];
+let nextMsg = 1;
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('Producer', 30, 60); ctx.fillText('Consumer', 500, 60);
+  ctx.fillStyle = '#fff9c4'; ctx.fillRect(180, 70, 240, 50); ctx.strokeRect(180, 70, 240, 50);
+  queue.forEach((m, i) => {
+    ctx.fillStyle = '#90caf9'; ctx.fillRect(190 + i * 45, 78, 38, 34); ctx.strokeRect(190 + i * 45, 78, 38, 34);
+    ctx.fillStyle = '#333'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(m, 209 + i * 45, 98);
+  });
 }
+document.getElementById('publish').onclick = () => { if (queue.length < 5) queue.push(`m${nextMsg++}`); draw(); };
+document.getElementById('consume').onclick = () => { if (queue.length) { const m = queue.shift(); document.getElementById('status').textContent = `Consumed ${m}.`; } draw(); };
 draw();
+
 </script>
 </body>
 </html>

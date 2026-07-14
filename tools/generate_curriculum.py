@@ -3,9 +3,12 @@
 
 import os
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+import browser_sims
 GITHUB_BASE = "https://github.com/ishmum123/cse-from-scratch/blob/main"
 
 CHAPTER_SEEDS = [
@@ -557,39 +560,7 @@ def generate_browser_stubs(chapters):
         d = browser_root / chapter_dir(i)
         d.mkdir(exist_ok=True)
         path = d / "index.html"
-        content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>{ch['title']}</title>
-<style>
-  body {{ font-family: sans-serif; text-align: center; }}
-  canvas {{ border: 1px solid #ccc; margin-top: 1rem; }}
-</style>
-</head>
-<body>
-<h1>{ch['title']}</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
-<script>
-const canvas = document.getElementById('sim');
-const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {{
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
-}}
-draw();
-</script>
-</body>
-</html>
-"""
-        path.write_text(content, encoding="utf-8")
+        path.write_text(browser_sims.get_simulation_html(i, ch['title'], ch['idea']), encoding="utf-8")
 
 
 def generate_simulations(chapters):

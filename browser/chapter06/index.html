@@ -2,30 +2,50 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Locality Matters</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Locality Matters</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Compare sequential vs random memory access patterns.</p><div class="controls"><button id="seq">Sequential access</button><button id="rand">Random access</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Sequential access is cache-friendly.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+const cells = Array(50).fill(0).map((_, i) => i);
+let pattern = [];
+function draw(next=-1) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  cells.forEach((_, i) => {
+    ctx.fillStyle = i === next ? '#ef5350' : (pattern.includes(i) ? '#66bb6a' : '#e0e0e0');
+    ctx.fillRect(10 + (i % 10) * 58, 20 + Math.floor(i / 10) * 35, 50, 25);
+    ctx.fillStyle = '#333';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(i, 35 + (i % 10) * 58, 37 + Math.floor(i / 10) * 35);
+  });
 }
+async function run(type) {
+  pattern = type === 'seq' ? cells.slice() : Array.from(cells).sort(() => Math.random() - 0.5);
+  let cacheHits = 0;
+  for (let i = 0; i < pattern.length; i++) {
+    if (type === 'seq' && i > 0 && Math.abs(pattern[i] - pattern[i-1]) <= 2) cacheHits++;
+    draw(pattern[i]);
+    document.getElementById('status').textContent = `${type === 'seq' ? 'Sequential' : 'Random'} access: ${i+1}/${pattern.length} (${cacheHits} cache-friendly steps)`;
+    await new Promise(r => setTimeout(r, 60));
+  }
+}
+document.getElementById('seq').onclick = () => run('seq');
+document.getElementById('rand').onclick = () => run('rand');
 draw();
+
 </script>
 </body>
 </html>

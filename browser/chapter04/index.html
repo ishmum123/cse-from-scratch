@@ -2,30 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Memory Has Addresses</title>
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  canvas { border: 1px solid #ccc; margin-top: 1rem; }
+  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
+  #status { min-height: 1.5rem; color: #444; }
 </style>
 </head>
 <body>
 <h1>Why Memory Has Addresses</h1>
-<p>Browser simulation placeholder. Replace the canvas script with the chapter-specific interaction.</p>
-<canvas id="sim" width="400" height="300"></canvas>
+<p>Click a cell to write a value at that address, or read it back.</p><div class="controls"><input id="addr" type="number" placeholder="Address 0-11" min="0" max="11"><input id="val" type="text" placeholder="Value"><button id="write">Write</button><button id="read">Read</button></div><canvas id="c" width="700" height="220"></canvas><div id="status">Select an address.</div>
 <script>
-const canvas = document.getElementById('sim');
+
+const mem = Array(12).fill('');
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let t = 0;
-function draw() {
+function draw(hi=-1) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(200 + Math.cos(t)*80, 150 + Math.sin(t)*40, 10, 0, Math.PI*2);
-  ctx.fillStyle = '#1976d2';
-  ctx.fill();
-  t += 0.05;
-  requestAnimationFrame(draw);
+  mem.forEach((v, i) => {
+    const x = 20 + (i % 6) * 110, y = 40 + Math.floor(i / 6) * 80;
+    ctx.fillStyle = i === hi ? '#ffcc80' : '#e8f5e9';
+    ctx.fillRect(x, y, 90, 55);
+    ctx.strokeRect(x, y, 90, 55);
+    ctx.fillStyle = '#333';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`addr ${i}`, x + 45, y + 18);
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(v || '—', x + 45, y + 42);
+  });
 }
+document.getElementById('write').onclick = () => {
+  const a = parseInt(document.getElementById('addr').value);
+  const v = document.getElementById('val').value;
+  if (a >= 0 && a < 12) { mem[a] = v; document.getElementById('status').textContent = `Wrote "${v}" to address ${a}.`; }
+  else document.getElementById('status').textContent = 'Invalid address.';
+  draw(a);
+};
+document.getElementById('read').onclick = () => {
+  const a = parseInt(document.getElementById('addr').value);
+  draw(a);
+  document.getElementById('status').textContent = (a >= 0 && a < 12) ? `Read address ${a}: ${mem[a] || '(empty)'}` : 'Invalid address.';
+};
 draw();
+
 </script>
 </body>
 </html>
