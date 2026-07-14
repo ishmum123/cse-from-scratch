@@ -1434,7 +1434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../31-why-btrees-won/" class="md-nav__link">
+      <a href="../31-why-b-trees-won/" class="md-nav__link">
         
   
   
@@ -1673,10 +1673,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#challenge" class="md-nav__link">
+  <a href="#thinking" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Challenge
+        Thinking
       
     </span>
   </a>
@@ -1684,10 +1684,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#exercise" class="md-nav__link">
+  <a href="#discovery" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exercise
+        Discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercises" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercises
       
     </span>
   </a>
@@ -2621,10 +2654,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#challenge" class="md-nav__link">
+  <a href="#thinking" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Challenge
+        Thinking
       
     </span>
   </a>
@@ -2632,10 +2665,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#exercise" class="md-nav__link">
+  <a href="#discovery" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exercise
+        Discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exercises" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exercises
       
     </span>
   </a>
@@ -2673,15 +2739,37 @@
 <h1 id="why-computers-need-addresses">Why Computers Need Addresses</h1>
 <h2 id="the-problem">The Problem</h2>
 <p>Two computers must talk, but they do not know each other exists.</p>
-<h2 id="challenge">Challenge</h2>
-<p>Implement the smallest program that demonstrates 'Computers Need Addresses' before reading the solution.</p>
-<h2 id="exercise">Exercise</h2>
-<p>Write a minimal implementation of 'Computers Need Addresses', then measure where it breaks.</p>
-<hr />
+<h2 id="thinking">Thinking</h2>
+<p>Before we name anything, ask yourself:</p>
+<ul>
+<li>What would happen if the missing piece were absent?</li>
+<li>What is the simplest system that could show this effect?</li>
+<li>Can you draw the interaction before reading the answer?</li>
+</ul>
+<h2 id="discovery">Discovery</h2>
+<p>Addresses uniquely identify machines on a network so messages can be routed.</p>
+<h2 id="implementation">Implementation</h2>
+<p>We build a minimal <code>addressing</code> model in Python.</p>
+<p>Source: <a href="https://github.com/ishmum123/cse-from-scratch/blob/main/python/chapter35/main.py"><code>python/chapter35/main.py</code></a>  ·  <a href="../assets/simulations/chapter35/sim.py">view in browser</a></p>
+<p>Run the implementation:</p>
+<pre><code class="language-bash">python python/chapter35/main.py
+</code></pre>
+<h2 id="simulation">Simulation</h2>
+<p>Source: <a href="https://github.com/ishmum123/cse-from-scratch/blob/main/simulations/chapter35/sim.py"><code>simulations/chapter35/sim.py</code></a>  ·  <a href="../assets/simulations/chapter35/sim.py">view in browser</a></p>
+<p>Run the chapter simulation:</p>
+<pre><code class="language-bash">python simulations/chapter35/sim.py
+</code></pre>
+<p>A browser version is available at <a href="https://github.com/ishmum123/cse-from-scratch/blob/main/browser/chapter35/index.html"><code>browser/chapter35/index.html</code></a>  ·  <a href="../assets/browser/chapter35/">run live</a>.</p>
+<h2 id="exercises">Exercises</h2>
+<ol>
+<li>Change one parameter in the simulation and predict what will happen.</li>
+<li>Draw the system before and after the discovery.</li>
+<li>Name one real-world system that depends on this idea and one way it can fail.</li>
+</ol>
 <h2 id="engineering-notes">Engineering Notes</h2>
-<p>This discovery exists because the previous approach failed under a real constraint. The lesson is not 'Computers Need Addresses' as a fact, but as a response to pressure.</p>
+<p>Real systems add noise, latency, and limits. The model we built is the simplest version; real <code>addressing</code> designs trade correctness, performance, and maintainability.</p>
 <hr />
-<p><strong>Continue → Why Packets Exist</strong></p>
+<p><strong>Continue → <a href="../36-why-packets-exist/">Why Packets Exist</a></strong></p>
 
 
 
