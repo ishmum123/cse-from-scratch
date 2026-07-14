@@ -5,44 +5,133 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Schedulers Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Schedulers Exist</h1>
-<p>Run tasks with round-robin scheduling.</p><div class="controls"><button id="step">Step</button><button id="reset">Reset</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Scheduler shares CPU time among tasks.</div>
+<p>FIFO scheduler runs one job to completion before the next. Round-robin shares the CPU, keeping latency low for all.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Running — watch latency.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'FIFO (one job at a time)', 'Round-Robin (quantum)', 320, 180);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'FIFO avg-latency', color:'#ef5350'}, {label:'RR avg-latency', color:'#43a047'}], 80);
 
-const tasks = [{name:'A',work:5},{name:'B',work:3},{name:'C',work:4}];
-let current = 0;
-const quantum = 1;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  tasks.forEach((t, i) => {
-    ctx.fillStyle = i === current ? '#ffcc80' : '#e3f2fd';
-    ctx.fillRect(40 + i * 180, 40, 120, 100);
-    ctx.strokeRect(40 + i * 180, 40, 120, 100);
-    ctx.fillStyle = '#333'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t.name, 100 + i * 180, 80);
-    ctx.font = '16px sans-serif'; ctx.fillText(`work: ${t.work}`, 100 + i * 180, 110);
-  });
+var quantum = 2;
+var numJobs = 4;
+var tickN = 0;
+var lastTs = 0;
+
+function makeJobs() {
+  var jobs = [];
+  for (var i=0; i<numJobs; i++) {
+    jobs.push({id:i+1, total: 4+Math.floor(Math.random()*6), done:0, color: ['#ef9a9a','#90caf9','#a5d6a7','#ffe082'][i%4]});
+  }
+  return jobs;
 }
-document.getElementById('step').onclick = () => {
-  if (tasks.every(t => t.work <= 0)) { document.getElementById('status').textContent = 'All tasks complete.'; return; }
-  while (tasks[current].work <= 0) current = (current + 1) % tasks.length;
-  tasks[current].work -= quantum;
-  document.getElementById('status').textContent = `Ran task ${tasks[current].name} for ${quantum} unit.`;
-  current = (current + 1) % tasks.length;
-  draw();
-};
-document.getElementById('reset').onclick = () => { tasks[0].work=5; tasks[1].work=3; tasks[2].work=4; current=0; draw(); };
-draw();
 
+var fifoJobs, rrJobs, fifoCur, rrCur, fifoLatencies, rrLatencies;
+
+function reset() {
+  tickN = 0;
+  fifoJobs = makeJobs();
+  rrJobs = fifoJobs.map(function(j){return {id:j.id,total:j.total,done:0,color:j.color};});
+  fifoCur = 0; rrCur = 0;
+  fifoLatencies = []; rrLatencies = [];
+  strip.reset();
+  met.update({tick:0,'FIFO finished':0,'RR finished':0,'FIFO avg-lat':'—','RR avg-lat':'—'});
+}
+
+function avg(arr) {
+  if (!arr.length) return '—';
+  return (arr.reduce(function(s,v){return s+v;},0)/arr.length).toFixed(1);
+}
+
+function drawJobs(ctx, cv, jobs, curIdx, label) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, bw=55, bh=22, gap=4, startX=(W-(jobs.length*(bw+gap)-gap))/2;
+  jobs.forEach(function(j,i){
+    var x=startX+i*(bw+gap), y=50;
+    var pct = j.total>0 ? j.done/j.total : 1;
+    ctx.fillStyle='#eee'; ctx.fillRect(x,y,bw,bh);
+    ctx.fillStyle=j.color; ctx.fillRect(x,y,bw*pct,bh);
+    ctx.strokeStyle = i===curIdx ? '#333' : '#ccc';
+    ctx.lineWidth = i===curIdx ? 2 : 1;
+    ctx.strokeRect(x,y,bw,bh); ctx.lineWidth=1;
+    ctx.fillStyle='#333'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('J'+j.id, x+bw/2, y-4);
+    ctx.fillText(j.done+'/'+j.total, x+bw/2, y+bh+12);
+  });
+  var done = jobs.filter(function(j){return j.done>=j.total;}).length;
+  ctx.fillStyle='#555'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Done: '+done+'/'+jobs.length, W/2, cv.height-6);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 400) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts;
+  tickN++;
+
+  // FIFO: run current job for 1 unit
+  var fifoActive = fifoJobs.filter(function(j){return j.done<j.total;});
+  if (fifoActive.length) {
+    var fj = fifoActive[0];
+    fj.done++;
+    if (fj.done >= fj.total) {
+      fifoLatencies.push(tickN);
+    }
+    fifoCur = fifoJobs.indexOf(fj);
+  }
+
+  // RR: run current job for 1 unit (rotate every `quantum` ticks)
+  var rrActive = rrJobs.filter(function(j){return j.done<j.total;});
+  if (rrActive.length) {
+    var rIdx = tickN % rrActive.length;
+    var rj = rrActive[rIdx % rrActive.length];
+    rj.done++;
+    if (rj.done >= rj.total) {
+      rrLatencies.push(tickN);
+    }
+    rrCur = rrJobs.indexOf(rj);
+  }
+
+  drawJobs(ctxA, cvA, fifoJobs, fifoCur, 'FIFO');
+  drawJobs(ctxB, cvB, rrJobs, rrCur, 'RR');
+
+  var fl = avg(fifoLatencies), rl = avg(rrLatencies);
+  strip.push(0, parseFloat(fl)||0);
+  strip.push(1, parseFloat(rl)||0);
+  met.update({tick:tickN,'FIFO finished':fifoLatencies.length,'RR finished':rrLatencies.length,
+    'FIFO avg-lat':fl,'RR avg-lat':rl});
+  document.getElementById('status').textContent =
+    'FIFO avg completion: '+fl+' | RR avg completion: '+rl;
+
+  var allFifoDone = fifoJobs.every(function(j){return j.done>=j.total;});
+  var allRRDone = rrJobs.every(function(j){return j.done>=j.total;});
+  if (allFifoDone && allRRDone) {
+    document.getElementById('status').textContent = 'All done. RR keeps latency even; FIFO starves later jobs.';
+    return;
+  }
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Quantum', 1, 4, 1, 2, function(v){ quantum=v; });
+SimLib.slider('Jobs', 2, 6, 1, 4, function(v){ numJobs=v; reset(); });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+met.update({tick:0,'FIFO finished':0,'RR finished':0,'FIFO avg-lat':'—','RR avg-lat':'—'});
+state.rafId = requestAnimationFrame(frame);
 </script>
 </body>
 </html>

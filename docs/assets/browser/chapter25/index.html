@@ -1,1 +1,108 @@
-../../../../browser/chapter25/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Locks Exist</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Locks Exist</h1>
+<p>Racy counter (no lock): two threads read-modify-write in parallel and lose updates. Locked counter: serialised access keeps the count correct.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Running — compare final counts.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Racy (no lock)', 'Locked (mutex)', 320, 180);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'racy count', color:'#ef5350'},{label:'locked count', color:'#43a047'}], 80);
+
+var numThreads = 2;
+var incPerTick = 5;
+var tickN = 0;
+var racyCount = 0, lockedCount = 0;
+var expected = 0;
+var lastTs = 0;
+
+function reset() {
+  tickN=0; racyCount=0; lockedCount=0; expected=0;
+  strip.reset();
+  met.update({tick:0,expected:0,racy:0,locked:0,'lost updates':0});
+  document.getElementById('status').textContent = 'Running…';
+}
+
+function drawCounter(ctx, cv, count, exp, label, color) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width,H=cv.height;
+  var lost = exp-count;
+  ctx.fillStyle=lost>0?'#ffcdd2':'#c8e6c9';
+  ctx.fillRect(W/2-70,40,140,60);
+  ctx.strokeStyle='#bbb'; ctx.strokeRect(W/2-70,40,140,60);
+  ctx.fillStyle='#333'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(count, W/2, 78);
+  ctx.font='11px sans-serif';
+  ctx.fillText('expected: '+exp, W/2, 115);
+  ctx.fillText(lost>0?('lost: '+lost):'correct!', W/2, 130);
+  // thread lanes
+  for (var t=0; t<numThreads; t++) {
+    var tx=20+t*(W-40)/Math.max(numThreads-1,1);
+    ctx.fillStyle=color; ctx.fillRect(tx-12,150,24,20);
+    ctx.strokeStyle='#bbb'; ctx.strokeRect(tx-12,150,24,20);
+    ctx.fillStyle='#333'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('T'+(t+1),tx,164);
+  }
+}
+
+function frame(ts) {
+  if (ts-lastTs<200) { state.rafId=requestAnimationFrame(frame); return; }
+  lastTs=ts; tickN++;
+
+  // Simulate race: each thread increments incPerTick times
+  // Racy: each thread reads SAME stale value, writes back — loses (numThreads-1)*incPerTick
+  var stale = racyCount;
+  for (var t=0; t<numThreads; t++) {
+    // each thread reads stale, adds incPerTick, writes — last writer wins
+    racyCount = stale + incPerTick; // all write same result
+  }
+  // Locked: each thread increments fully serialised
+  for (var tl=0; tl<numThreads; tl++) {
+    lockedCount += incPerTick;
+  }
+  expected = lockedCount;
+
+  strip.push(0, racyCount);
+  strip.push(1, lockedCount);
+  drawCounter(ctxA, cvA, racyCount, expected, 'racy', '#ef9a9a');
+  drawCounter(ctxB, cvB, lockedCount, expected, 'locked', '#a5d6a7');
+  met.update({tick:tickN, expected:expected, racy:racyCount, locked:lockedCount,
+    'lost updates': expected-racyCount});
+  document.getElementById('status').textContent =
+    'Expected: '+expected+' | Racy: '+racyCount+' (lost '+(expected-racyCount)+') | Locked: '+lockedCount;
+
+  if (tickN>=40) {
+    document.getElementById('status').textContent =
+      'Done. Racy lost '+(expected-racyCount)+' updates. Lock keeps count exact.';
+    return;
+  }
+  if (!state.paused) state.rafId=requestAnimationFrame(frame);
+}
+
+SimLib.slider('Threads', 2, 5, 1, 2, function(v){ numThreads=v; reset(); });
+SimLib.slider('Incs/tick', 1, 10, 1, 5, function(v){ incPerTick=v; });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId=requestAnimationFrame(frame);
+</script>
+</body>
+</html>

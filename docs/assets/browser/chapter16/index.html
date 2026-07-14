@@ -1,1 +1,146 @@
-../../../../browser/chapter16/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Greedy Sometimes Works</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Greedy Sometimes Works</h1>
+<p>Coin change: greedy (largest first) vs dynamic programming (optimal). Try amount=30 with coins [1,4,15,20] to see greedy fail.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Solve to compare strategies.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
+<script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Greedy (largest first)', 'DP (optimal)', 320, 220);
+
+let amount = 30;
+let coins = [1, 4, 15, 20];
+let coinsStr = '1,4,15,20';
+
+function greedySolve(amount, coins) {
+  const sorted = coins.slice().sort(function (a, b) { return b - a; });
+  const used = [];
+  let rem = amount;
+  for (const c of sorted) {
+    while (rem >= c) { used.push(c); rem -= c; }
+  }
+  return { used: used, total: used.length, success: rem === 0 };
+}
+
+function dpSolve(amount, coins) {
+  const dp = new Array(amount + 1).fill(Infinity);
+  const choice = new Array(amount + 1).fill(-1);
+  dp[0] = 0;
+  for (let i = 1; i <= amount; i++) {
+    for (const c of coins) {
+      if (c <= i && dp[i - c] + 1 < dp[i]) {
+        dp[i] = dp[i - c] + 1;
+        choice[i] = c;
+      }
+    }
+  }
+  const used = [];
+  let rem = amount;
+  while (rem > 0 && choice[rem] !== -1) { used.push(choice[rem]); rem -= choice[rem]; }
+  return { used: used, total: dp[amount], success: dp[amount] !== Infinity };
+}
+
+function drawResult(ctx, cv, result, label) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const ch = cv.height;
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(label + ' — amount: ' + amount, cv.width / 2, 20);
+
+  if (!result.success) {
+    ctx.fillStyle = '#c62828'; ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('Cannot make change!', cv.width / 2, ch / 2);
+    return;
+  }
+
+  const coinCounts = {};
+  result.used.forEach(function (c) { coinCounts[c] = (coinCounts[c] || 0) + 1; });
+  const entries = Object.entries(coinCounts).sort(function (a, b) { return b[0] - a[0]; });
+
+  let y = 46;
+  const coinColors = ['#42a5f5', '#66bb6a', '#ffa726', '#ab47bc', '#ef5350'];
+  entries.forEach(function (kv, idx) {
+    const c = Number(kv[0]), cnt = kv[1];
+    ctx.fillStyle = coinColors[idx % coinColors.length];
+    const coinR = Math.min(22, Math.floor((cv.width - 30) / (cnt * 2 + 1)));
+    for (let i = 0; i < cnt; i++) {
+      const x = 15 + i * (coinR * 2 + 4) + coinR;
+      ctx.beginPath(); ctx.arc(x, y + coinR, coinR, 0, Math.PI * 2);
+      ctx.fill(); ctx.strokeStyle = '#fff'; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.min(12, coinR) + 'px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(c, x, y + coinR + 4);
+      ctx.fillStyle = coinColors[idx % coinColors.length];
+    }
+    ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('× ' + cnt + ' = ' + (c * cnt), cv.width - 10, y + coinR + 4);
+    y += coinR * 2 + 10;
+  });
+
+  ctx.fillStyle = result.total === greedyResult.total ? '#388e3c' : '#c62828';
+  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Total coins: ' + result.total, cv.width / 2, ch - 10);
+}
+
+let greedyResult = { used: [], total: 0, success: false };
+
+function solve() {
+  try {
+    coins = coinsStr.split(',').map(Number).filter(function (v) { return v > 0; });
+  } catch (e) { return; }
+  greedyResult = greedySolve(amount, coins);
+  const dpResult = dpSolve(amount, coins);
+  drawResult(ctxA, cvA, greedyResult, 'Greedy');
+  drawResult(ctxB, cvB, dpResult, 'DP');
+  const greedy_ok = greedyResult.total === dpResult.total;
+  met.update({
+    amount: amount,
+    coins: coins.join(','),
+    'greedy coins': greedyResult.success ? greedyResult.total : 'fail',
+    'dp coins': dpResult.success ? dpResult.total : 'fail',
+    'greedy optimal': greedy_ok ? 'yes' : 'NO'
+  });
+  document.getElementById('status').textContent = greedy_ok
+    ? 'Greedy is optimal here (' + greedyResult.total + ' coins).'
+    : 'Greedy uses ' + greedyResult.total + ' coins; DP finds ' + dpResult.total + ' — greedy fails!';
+}
+
+SimLib.numberInput('Amount', 1, 100, 30, function (v) { amount = v; });
+
+// Build coins text input manually (CSV string, not number)
+(function () {
+  const ctrl = document.getElementById('controls');
+  const wrap = document.createElement('label');
+  wrap.className = 'sim-label';
+  wrap.appendChild(document.createTextNode('Coins (csv): '));
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.value = coinsStr;
+  inp.style.width = '120px';
+  inp.style.padding = '0.25rem 0.4rem';
+  inp.style.fontSize = '0.9rem';
+  inp.addEventListener('change', function () { coinsStr = this.value; });
+  wrap.appendChild(inp);
+  ctrl.appendChild(wrap);
+}());
+
+SimLib.makeButton('Solve', solve);
+
+const met = SimLib.metrics();
+solve();
+</script>
+</body>
+</html>

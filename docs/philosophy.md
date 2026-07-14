@@ -3,7 +3,7 @@
 - Discover before defining.
 - Build before abstracting.
 - No black boxes.
-- Every chapter ends with code.
+- Every chapter ends with an interactive browser simulation — sliders, pause/reset, naive-vs-solution A/B. Nothing to install.
 
 ## Immutable Rules
 

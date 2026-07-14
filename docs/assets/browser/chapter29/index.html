@@ -1,1 +1,111 @@
-../../../../browser/chapter29/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Files Aren't Enough</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Files Aren't Enough</h1>
+<p>File scan reads every record sequentially. A database with a B-tree index jumps directly to the match. Watch reads-examined grow linearly vs O(log n).</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Search to compare.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'File scan O(n)', 'DB index O(log n)', 320, 180);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'scan reads', color:'#ef5350'},{label:'index reads', color:'#43a047'}], 30);
+
+var tableSize = 20;
+var records, target, scanStep, scanDone, scanReads, indexReads;
+var rafId = null, lastTs = 0;
+
+function buildTable() {
+  records = [];
+  for (var i=0; i<tableSize; i++) records.push(i*3+1);
+  target = records[Math.floor(Math.random()*tableSize)];
+  scanStep=-1; scanDone=false; scanReads=0; indexReads=0;
+  strip.reset();
+  met.update({target:target,size:tableSize,'scan reads':0,'index reads':0,'savings':0});
+  document.getElementById('status').textContent = 'Target: '+target+'. Press Search.';
+  drawBoth(-1,-1);
+}
+
+function drawSide(ctx, cv, records, hiIdx, foundIdx, reads, label) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, n=records.length, cw=Math.floor((W-10)/n), ch=36, sy=40;
+  records.forEach(function(v,i){
+    var isCur=i===hiIdx, isFound=i===foundIdx;
+    ctx.fillStyle=isFound?'#c8e6c9':(isCur?'#fff176':(i<hiIdx&&hiIdx>=0?'#ffcdd2':'#f5f5f5'));
+    ctx.fillRect(5+i*cw,sy,cw-1,ch);
+    ctx.strokeStyle=isFound||isCur?'#f57f17':'#ddd';
+    ctx.lineWidth=isFound||isCur?2:1;
+    ctx.strokeRect(5+i*cw,sy,cw-1,ch); ctx.lineWidth=1;
+    ctx.fillStyle='#333'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(v, 5+i*cw+cw/2-0.5, sy+ch/2+3);
+  });
+  ctx.fillStyle='#555'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(label+' | reads: '+reads, W/2, sy+ch+18);
+  ctx.fillText('target: '+target, W/2, 20);
+}
+
+function drawBoth(scanHi, idxFound) {
+  drawSide(ctxA, cvA, records, scanHi, scanDone&&records[scanHi]===target?scanHi:-1, scanReads, 'File scan');
+  var logIdx = idxFound>=0 ? idxFound : -1;
+  drawSide(ctxB, cvB, records, -1, logIdx, indexReads, 'Index lookup');
+}
+
+function runSearch() {
+  if (rafId) cancelAnimationFrame(rafId);
+  strip.reset();
+  scanStep=0; scanDone=false; scanReads=0;
+  // index reads: simulate binary search depth
+  indexReads = Math.ceil(Math.log2(tableSize+1));
+  var idxFound = records.indexOf(target);
+  // draw index side immediately
+  drawSide(ctxB, cvB, records, -1, idxFound, indexReads, 'Index lookup');
+  strip.push(1, indexReads);
+  lastTs=0;
+
+  function tick(ts) {
+    if (ts-lastTs<150) { rafId=requestAnimationFrame(tick); return; }
+    lastTs=ts;
+    if (scanStep<records.length) {
+      scanReads++;
+      var found = records[scanStep]===target;
+      strip.push(0, scanReads);
+      met.update({target:target,size:tableSize,'scan reads':scanReads,'index reads':indexReads,
+        'savings':Math.max(0,scanReads-indexReads)});
+      drawSide(ctxA, cvA, records, scanStep, found?scanStep:-1, scanReads, 'File scan');
+      if (found) {
+        scanDone=true;
+        document.getElementById('status').textContent =
+          'Scan: '+scanReads+' reads. Index: '+indexReads+' reads. Savings: '+(scanReads-indexReads);
+        return;
+      }
+      scanStep++;
+      rafId=requestAnimationFrame(tick);
+    }
+  }
+  rafId=requestAnimationFrame(tick);
+}
+
+SimLib.slider('Table size', 5, 40, 5, 20, function(v){ tableSize=v; buildTable(); });
+SimLib.makeButton('Search', runSearch);
+SimLib.makeButton('New target', buildTable);
+var met = SimLib.metrics();
+buildTable();
+</script>
+</body>
+</html>

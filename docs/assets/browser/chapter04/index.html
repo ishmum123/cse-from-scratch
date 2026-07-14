@@ -1,1 +1,104 @@
-../../../../browser/chapter04/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Memory Has Addresses</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Memory Has Addresses</h1>
+<p>Every byte has a unique address. Write a value then read it back by address.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Enter an address and value, then Store. Then Fetch to retrieve it.</div>
+<canvas id="c" width="700" height="240"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const MEM_SIZE = 16;
+const memory = new Array(MEM_SIZE).fill(null);
+let writeAddr = 0, fetchAddr = 0, lastFetch = null, lastWrite = null;
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const cw = 38, ch = 50, startX = 18, startY = 50, cols = MEM_SIZE;
+
+  ctx.fillStyle = '#555';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Memory (16 bytes, word-addressed)', startX, 36);
+
+  for (let i = 0; i < MEM_SIZE; i++) {
+    const x = startX + i * cw;
+    const isWrite = lastWrite === i;
+    const isFetch = lastFetch === i;
+    ctx.fillStyle = isFetch ? '#c8e6c9' : (isWrite ? '#fff59d' : (memory[i] !== null ? '#e3f2fd' : '#f9f9f9'));
+    ctx.fillRect(x, startY, cw - 2, ch);
+    ctx.strokeStyle = isFetch ? '#388e3c' : (isWrite ? '#f9a825' : '#ccc');
+    ctx.lineWidth = (isFetch || isWrite) ? 2 : 1;
+    ctx.strokeRect(x, startY, cw - 2, ch);
+    ctx.lineWidth = 1;
+
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(memory[i] !== null ? memory[i] : '—', x + cw / 2 - 1, startY + 30);
+
+    ctx.fillStyle = '#aaa';
+    ctx.font = '9px monospace';
+    ctx.fillText(i.toString(16).padStart(2, '0'), x + cw / 2 - 1, startY + 47);
+  }
+
+  // addr bus illustration
+  ctx.fillStyle = '#888';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Address bus selects row; data bus carries value', canvas.width / 2, startY + ch + 28);
+
+  if (lastFetch !== null && memory[lastFetch] !== null) {
+    ctx.fillStyle = '#388e3c';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('Fetched mem[0x' + lastFetch.toString(16) + '] = ' + memory[lastFetch], canvas.width / 2, startY + ch + 50);
+  }
+}
+
+const writeAddrInp = SimLib.numberInput('Write addr', 0, MEM_SIZE - 1, 0, function (v) { writeAddr = v; });
+const writeValInp = SimLib.numberInput('Value', 0, 255, 42, function () {});
+SimLib.makeButton('Store', function () {
+  const v = Number(writeValInp.value);
+  memory[writeAddr] = v;
+  lastWrite = writeAddr; lastFetch = null;
+  document.getElementById('status').textContent = 'Stored ' + v + ' at address 0x' + writeAddr.toString(16) + '.';
+  met.update({ 'write addr': '0x' + writeAddr.toString(16), 'stored': v });
+  draw();
+});
+
+const fetchAddrInp = SimLib.numberInput('Fetch addr', 0, MEM_SIZE - 1, 0, function (v) { fetchAddr = v; });
+SimLib.makeButton('Fetch', function () {
+  lastFetch = fetchAddr; lastWrite = null;
+  const v = memory[fetchAddr];
+  document.getElementById('status').textContent = v !== null ? ('Fetched ' + v + ' from 0x' + fetchAddr.toString(16) + '.') : ('0x' + fetchAddr.toString(16) + ' is empty.');
+  met.update({ 'fetch addr': '0x' + fetchAddr.toString(16), 'value': v !== null ? v : '—' });
+  draw();
+});
+
+SimLib.makeButton('Reset', function () {
+  memory.fill(null); lastFetch = null; lastWrite = null;
+  document.getElementById('status').textContent = 'Memory cleared.';
+  met.update({ 'write addr': '—', stored: '—', 'fetch addr': '—', value: '—' });
+  draw();
+});
+
+const met = SimLib.metrics();
+met.update({ 'write addr': '—', stored: '—', 'fetch addr': '—', value: '—' });
+draw();
+</script>
+</body>
+</html>

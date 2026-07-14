@@ -1,1 +1,153 @@
-../../../../browser/chapter13/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Sorting Exists</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Sorting Exists</h1>
+<p>Bubble sort O(n²) vs merge sort O(n log n). Same array, live comparison count.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Run to race both sorts.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Bubble Sort O(n²)', 'Merge Sort O(n log n)', 320, 200);
+const strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{ label: 'bubble cmps', color: '#ef5350' }, { label: 'merge cmps', color: '#43a047' }], 80);
+
+let size = 14;
+let orig = [];
+let bubArr = [], merArr = [];
+let bubCmps = 0, merCmps = 0;
+let bubDone = false, merDone = false;
+let rafId = null, lastTick = 0;
+let bubI = 0, bubJ = 0, bubHi = -1, bubSwap = -1;
+let mergeSteps = [], merStep = 0, mergeArr = [];
+
+function buildArray() {
+  orig = Array.from({ length: size }, function () { return Math.floor(Math.random() * 80 + 10); });
+}
+
+function cellW(cv) { return Math.floor((cv.width - 10) / size); }
+
+function drawBars(ctx, cv, arr, hi1, hi2, label) {
+  const cw = cellW(cv), ch = cv.height;
+  ctx.clearRect(0, 0, cw * size + 10, ch);
+  const maxV = Math.max.apply(null, arr) || 1;
+  arr.forEach(function (v, i) {
+    const x = 5 + i * cw;
+    const barH = Math.floor((v / maxV) * (ch - 40));
+    const isCur1 = i === hi1, isCur2 = i === hi2;
+    ctx.fillStyle = isCur1 ? '#ef5350' : (isCur2 ? '#ffcc80' : '#90caf9');
+    ctx.fillRect(x, ch - barH - 20, cw - 2, barH);
+    ctx.fillStyle = '#666'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(v, x + cw / 2 - 1, ch - 6);
+  });
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(label, cv.width / 2, 14);
+}
+
+// Merge sort: collect all steps up front
+function mergeSortSteps(arr) {
+  const steps = [];
+  const a = arr.slice();
+  function ms(l, r) {
+    if (r - l < 1) return;
+    const m = Math.floor((l + r) / 2);
+    ms(l, m); ms(m + 1, r);
+    const left = a.slice(l, m + 1), right = a.slice(m + 1, r + 1);
+    let i = 0, j = 0, k = l;
+    while (i < left.length && j < right.length) {
+      steps.push({ arr: a.slice(), cmp: [l + i, m + 1 + j] });
+      if (left[i] <= right[j]) a[k++] = left[i++];
+      else a[k++] = right[j++];
+    }
+    while (i < left.length) a[k++] = left[i++];
+    while (j < right.length) a[k++] = right[j++];
+  }
+  ms(0, arr.length - 1);
+  steps.push({ arr: a.slice(), cmp: [-1, -1] });
+  return steps;
+}
+
+function reset() {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  buildArray();
+  bubArr = orig.slice(); merArr = orig.slice();
+  bubCmps = 0; merCmps = 0; bubDone = false; merDone = false;
+  bubI = 0; bubJ = 0; bubHi = -1; bubSwap = -1;
+  mergeSteps = mergeSortSteps(orig.slice());
+  mergeArr = orig.slice(); merStep = 0;
+  strip.reset();
+  drawBars(ctxA, cvA, bubArr, -1, -1, 'Bubble: 0 cmps');
+  drawBars(ctxB, cvB, merArr, -1, -1, 'Merge: 0 cmps');
+  met.update({ 'bubble cmps': 0, 'merge cmps': 0, size: size });
+  document.getElementById('status').textContent = 'Press Run.';
+}
+
+function tick(ts) {
+  if (ts - lastTick < 80) { rafId = requestAnimationFrame(tick); return; }
+  lastTick = ts;
+  let anyRunning = false;
+
+  // bubble sort: one comparison per tick
+  if (!bubDone) {
+    anyRunning = true;
+    if (bubJ < size - 1 - bubI) {
+      bubCmps++;
+      if (bubArr[bubJ] > bubArr[bubJ + 1]) {
+        const tmp = bubArr[bubJ]; bubArr[bubJ] = bubArr[bubJ + 1]; bubArr[bubJ + 1] = tmp;
+        bubSwap = bubJ;
+      } else { bubSwap = -1; }
+      bubHi = bubJ;
+      bubJ++;
+    } else {
+      bubJ = 0; bubI++;
+      if (bubI >= size - 1) { bubDone = true; bubHi = -1; }
+    }
+    drawBars(ctxA, cvA, bubArr, bubHi, bubHi + 1, 'Bubble: ' + bubCmps + ' cmps');
+  }
+
+  // merge sort: one step per tick
+  if (!merDone && merStep < mergeSteps.length) {
+    anyRunning = true;
+    const s = mergeSteps[merStep];
+    merCmps++;
+    mergeArr = s.arr.slice();
+    drawBars(ctxB, cvB, mergeArr, s.cmp[0], s.cmp[1], 'Merge: ' + merCmps + ' cmps');
+    merStep++;
+    if (merStep >= mergeSteps.length) merDone = true;
+  }
+
+  strip.push(0, bubCmps);
+  strip.push(1, merCmps);
+  met.update({ 'bubble cmps': bubCmps, 'merge cmps': merCmps, 'ratio': bubDone && merDone ? (bubCmps / Math.max(1, merCmps)).toFixed(1) + '×' : '—', size: size });
+
+  if (!bubDone || !merDone) {
+    rafId = requestAnimationFrame(tick);
+  } else {
+    document.getElementById('status').textContent = 'Done. Bubble: ' + bubCmps + ' cmps. Merge: ' + merCmps + ' cmps. Ratio: ' + (bubCmps / Math.max(1, merCmps)).toFixed(1) + '×.';
+    rafId = null;
+  }
+}
+
+SimLib.slider('Array size', 5, 20, 1, 14, function (v) { size = v; reset(); });
+SimLib.makeButton('Run', function () { reset(); rafId = requestAnimationFrame(tick); });
+SimLib.makeButton('Reset', reset);
+
+const met = SimLib.metrics();
+reset();
+</script>
+</body>
+</html>

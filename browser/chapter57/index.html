@@ -5,36 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Quantization Exists</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Quantization Exists</h1>
-<p>Reduce precision to save space with small accuracy loss.</p><div class="controls"><input id="bits" type="range" min="1" max="8" value="4"><span id="bitsLabel">4 bits</span></div><canvas id="c" width="500" height="200"></canvas><div id="status">Fewer bits per weight means smaller models.</div>
+<p>Full precision (FP32): large model, slow inference, high memory. Quantized (INT8/INT4): model shrinks, speed increases — small accuracy cost.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Comparing full precision vs quantized model.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Full precision (FP32)', 'Quantized (INT8)', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'fp32 speed', color:'#ef5350'},{label:'int8 speed', color:'#43a047'}], 80);
 
-const weights = [0.12, 0.87, -0.34, 0.56, -0.91, 0.23, 0.45, -0.66];
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function quantize(v, bits) { const levels = Math.pow(2, bits) - 1; return Math.round(v * levels) / levels; }
-function draw() {
-  const bits = parseInt(document.getElementById('bits').value);
-  document.getElementById('bitsLabel').textContent = bits + ' bits';
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  weights.forEach((w, i) => {
-    const q = quantize(w, bits);
-    ctx.fillStyle = '#90caf9'; ctx.fillRect(40 + i * 55, 100 - w * 80, 40, w * 80); ctx.strokeRect(40 + i * 55, 100 - w * 80, 40, w * 80);
-    ctx.fillStyle = '#ef5350'; ctx.fillRect(40 + i * 55, 100 - q * 80, 40, q * 80);
-    ctx.fillStyle = '#333'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(q.toFixed(2), 60 + i * 55, 140);
-  });
+var modelParams = 7; // billions
+var quantBits = 8;
+var tickN = 0, lastTs = 0;
+
+function reset() {
+  tickN = 0;
+  strip.reset();
+  met.update({ params: modelParams + 'B', 'fp32 GB': 0, 'int8 GB': 0, speedup: '1x' });
+  document.getElementById('status').textContent = 'Running.';
 }
-document.getElementById('bits').oninput = draw;
-draw();
 
+function drawModel(ctx, cv, params, bits, toksPerSec, memGB) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  var barH = Math.min(100, Math.round(memGB * 3));
+  var color = bits === 32 ? '#ffcdd2' : '#c8e6c9';
+  ctx.fillStyle = color;
+  ctx.fillRect(W / 2 - 50, 145 - barH, 100, barH);
+  ctx.strokeStyle = '#bbb'; ctx.strokeRect(W / 2 - 50, 45, 100, 100);
+  ctx.fillStyle = '#333'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(params + 'B params', W / 2, 70);
+  ctx.fillText(bits + '-bit', W / 2, 90);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = '#555';
+  ctx.fillText(memGB.toFixed(1) + ' GB VRAM', W / 2, 115);
+  ctx.fillText(toksPerSec + ' tok/s', W / 2, 135);
+  // accuracy bar
+  var acc = bits === 32 ? 100 : Math.max(90, 100 - (32 - bits) * 0.5);
+  ctx.fillStyle = '#e3f2fd'; ctx.fillRect(W / 2 - 50, 165, 100, 14);
+  ctx.fillStyle = '#1565c0'; ctx.fillRect(W / 2 - 50, 165, Math.round(acc), 14);
+  ctx.fillStyle = '#fff'; ctx.font = '9px sans-serif'; ctx.fillText('acc: ' + acc.toFixed(0) + '%', W / 2, 176);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 500) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts; tickN++;
+
+  var fp32Mem = modelParams * 4; // 4 bytes/param
+  var intMem = modelParams * (quantBits / 8);
+  var fp32Speed = 10;
+  var intSpeed = Math.round(fp32Speed * (32 / quantBits));
+
+  strip.push(0, fp32Speed);
+  strip.push(1, intSpeed);
+  drawModel(ctxA, cvA, modelParams, 32, fp32Speed, fp32Mem);
+  drawModel(ctxB, cvB, modelParams, quantBits, intSpeed, intMem);
+  met.update({ params: modelParams + 'B', 'fp32 GB': fp32Mem.toFixed(0), 'int8 GB': intMem.toFixed(1), speedup: (intSpeed / fp32Speed).toFixed(1) + 'x' });
+  document.getElementById('status').textContent =
+    modelParams + 'B model | FP32: ' + fp32Mem + 'GB, ' + fp32Speed + 'tok/s | INT' + quantBits + ': ' + intMem.toFixed(1) + 'GB, ' + intSpeed + 'tok/s';
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Model (B params)', 1, 70, 1, 7, function(v) { modelParams = v; reset(); });
+SimLib.slider('Quant bits', 4, 16, 4, 8, function(v) { quantBits = v; reset(); });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId = requestAnimationFrame(frame);
 </script>
 </body>
 </html>

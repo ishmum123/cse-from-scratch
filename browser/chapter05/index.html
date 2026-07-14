@@ -5,45 +5,163 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Copying Is Expensive</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Copying Is Expensive</h1>
-<p>Copy blocks of data. Larger blocks take more time.</p><div class="controls"><button id="small">Copy 1 block</button><button id="medium">Copy 10 blocks</button><button id="large">Copy 50 blocks</button></div><canvas id="c" width="600" height="160"></canvas><div id="status">Press a button to copy.</div>
+<p>Copy writes every byte; passing a reference writes one pointer. A/B comparison.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Run to animate both approaches.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Copy (O(n))', 'Reference (O(1))', 320, 200);
 
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-let blocks = [];
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  blocks.forEach((b, i) => {
-    ctx.fillStyle = b.copied ? '#66bb6a' : '#90caf9';
-    ctx.fillRect(10 + i * 11, 40, 9, 60);
-  });
-}
-async function copy(n) {
-  blocks = Array(n).fill(0).map(() => ({copied: false}));
-  document.getElementById('status').textContent = `Copying ${n} blocks...`;
-  const start = performance.now();
-  for (let i = 0; i < n; i++) {
-    blocks[i].copied = true;
-    if (i % Math.max(1, Math.floor(n / 20)) === 0) { draw(); await new Promise(r => setTimeout(r, 10)); }
+let size = 16;
+let running = false;
+let rafId = null;
+let stepA = 0, stepB = 0;
+let startTime = null;
+let msA = 0, msB = 0;
+
+function drawPanel(ctx, cv, step, label, done) {
+  const cw = cv.width, ch = cv.height;
+  ctx.clearRect(0, 0, cw, ch);
+  const cellW = Math.floor((cw - 20) / size);
+  const cellH = 28;
+  const srcY = 30, dstY = 110;
+
+  ctx.fillStyle = '#555';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Source', 10, srcY - 6);
+  ctx.fillText(label === 'copy' ? 'Destination (copy)' : 'Pointer', 10, dstY - 6);
+
+  for (let i = 0; i < size; i++) {
+    const x = 10 + i * cellW;
+    ctx.fillStyle = (i < step) ? '#bbdefb' : '#f5f5f5';
+    ctx.fillRect(x, srcY, cellW - 1, cellH);
+    ctx.strokeStyle = '#90caf9';
+    ctx.strokeRect(x, srcY, cellW - 1, cellH);
+    ctx.fillStyle = '#333';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(i, x + cellW / 2 - 1, srcY + 18);
   }
-  draw();
-  const ms = (performance.now() - start).toFixed(1);
-  document.getElementById('status').textContent = `Copied ${n} blocks in ${ms} ms.`;
-}
-document.getElementById('small').onclick = () => copy(1);
-document.getElementById('medium').onclick = () => copy(10);
-document.getElementById('large').onclick = () => copy(50);
-draw();
 
+  if (label === 'copy') {
+    for (let i = 0; i < size; i++) {
+      const x = 10 + i * cellW;
+      ctx.fillStyle = (i < step) ? '#c8e6c9' : '#f5f5f5';
+      ctx.fillRect(x, dstY, cellW - 1, cellH);
+      ctx.strokeStyle = '#a5d6a7';
+      ctx.strokeRect(x, dstY, cellW - 1, cellH);
+      ctx.fillStyle = '#333';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(i < step ? i : '?', x + cellW / 2 - 1, dstY + 18);
+    }
+    if (step < size) {
+      const x = 10 + step * cellW;
+      ctx.fillStyle = 'rgba(255,193,7,0.7)';
+      ctx.fillRect(x, srcY, cellW - 1, cellH);
+      ctx.fillRect(x, dstY, cellW - 1, cellH);
+    }
+    ctx.fillStyle = done ? '#388e3c' : '#555';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(done ? ('Done — ' + size + ' writes') : ('Copied ' + step + '/' + size), cw / 2, 170);
+  } else {
+    // reference: just draw an arrow
+    ctx.fillStyle = '#fff9c4';
+    ctx.fillRect(10, dstY, 80, 30);
+    ctx.strokeStyle = '#f9a825';
+    ctx.strokeRect(10, dstY, 80, 30);
+    ctx.fillStyle = '#555';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('*ptr', 50, dstY + 19);
+
+    if (step >= 1) {
+      ctx.strokeStyle = '#f9a825';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(50, dstY); ctx.lineTo(50, srcY + cellH); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+    }
+    ctx.fillStyle = done ? '#388e3c' : '#555';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(done ? 'Done — 1 write' : 'Writing pointer…', cw / 2, 170);
+  }
+}
+
+function reset() {
+  stepA = 0; stepB = 0; startTime = null; msA = 0; msB = 0; running = false;
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  drawPanel(ctxA, cvA, 0, 'copy', false);
+  drawPanel(ctxB, cvB, 0, 'ref', false);
+  document.getElementById('status').textContent = 'Press Run to animate both approaches.';
+  met.update({ 'copy writes': 0, 'ref writes': 0, 'copy time (rel)': '—', 'ref time (rel)': '1' });
+}
+
+const DELAY = 60; // ms per copy step (simulated)
+let lastTick = 0;
+
+function tick(ts) {
+  if (!startTime) startTime = ts;
+  if (ts - lastTick > DELAY) {
+    lastTick = ts;
+    if (stepA < size) {
+      stepA++;
+      if (stepA === size) msA = ts - startTime;
+    }
+    if (stepB < 1) {
+      stepB = 1;
+      msB = 1;
+    }
+    drawPanel(ctxA, cvA, stepA, 'copy', stepA >= size);
+    drawPanel(ctxB, cvB, stepB, 'ref', true);
+    met.update({
+      'copy writes': stepA,
+      'ref writes': 1,
+      'copy time (rel)': stepA + 'n',
+      'ref time (rel)': '1'
+    });
+    document.getElementById('status').textContent = stepA >= size
+      ? 'Copy complete: ' + size + ' writes. Reference: always 1 write.'
+      : 'Copying byte ' + stepA + ' of ' + size + '…';
+  }
+  if (stepA < size) {
+    rafId = requestAnimationFrame(tick);
+  } else {
+    running = false;
+    rafId = null;
+  }
+}
+
+SimLib.slider('Array size (n)', 4, 32, 4, 16, function (v) { size = v; reset(); });
+
+const state = SimLib.pauseResumeReset(tick, reset);
+
+SimLib.makeButton('Run', function () {
+  reset();
+  running = true;
+  state.paused = false;
+  rafId = requestAnimationFrame(tick);
+});
+
+const met = SimLib.metrics();
+met.update({ 'copy writes': 0, 'ref writes': 0, 'copy time (rel)': '—', 'ref time (rel)': '1' });
+
+reset();
 </script>
 </body>
 </html>

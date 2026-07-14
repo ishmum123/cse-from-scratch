@@ -5,33 +5,163 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Stacks Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Stacks Exist</h1>
-<p>Push and pop values from a stack.</p><div class="controls"><input id="val" type="text" placeholder="Value"><button id="push">Push</button><button id="pop">Pop</button></div><canvas id="c" width="300" height="300"></canvas><div id="status">Stack is LIFO: last in, first out.</div>
+<p>A stack holds return addresses in LIFO order. Push a frame; pop returns to the caller.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Push frames or simulate a function call chain.</div>
+<canvas id="c" width="700" height="320"></canvas>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
-
-const stack = [];
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
+const strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{ label: 'stack depth', color: '#7b1fa2' }], 40);
+
+const MAX_DEPTH = 8;
+let stack = [];
+let pushCount = 0, popCount = 0;
+let highlighted = -1; // index from top
+
+const FRAME_LABELS = ['main()', 'parseInput()', 'tokenize()', 'readChar()', 'fetch()', 'decrypt()', 'validate()', 'hash()'];
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeRect(100, 40, 100, 240);
-  stack.forEach((v, i) => {
-    ctx.fillStyle = '#90caf9'; ctx.fillRect(105, 270 - (i + 1) * 40, 90, 35); ctx.strokeRect(105, 270 - (i + 1) * 40, 90, 35);
-    ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(v, 150, 263 - i * 40);
-  });
-}
-document.getElementById('push').onclick = () => { const v = document.getElementById('val').value; if (v && stack.length < 6) stack.push(v); draw(); };
-document.getElementById('pop').onclick = () => { if (stack.length) { const v = stack.pop(); document.getElementById('status').textContent = `Popped: ${v}`; } draw(); };
-draw();
+  const frameW = 280, frameH = 32, startX = (canvas.width - frameW) / 2;
+  const stackBase = canvas.height - 20;
 
+  // stack base line
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(startX - 20, stackBase); ctx.lineTo(startX + frameW + 20, stackBase); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Stack bottom (SP = 0)', canvas.width / 2, stackBase + 14);
+
+  // SP arrow label
+  if (stack.length > 0) {
+    const topY = stackBase - stack.length * (frameH + 2) - frameH;
+    ctx.fillStyle = '#7b1fa2'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('← SP (top)', startX - 24, topY + frameH / 2 + 4);
+  }
+
+  // frames (bottom of stack first)
+  stack.forEach(function (frame, i) {
+    const y = stackBase - (i + 1) * (frameH + 2);
+    const isTop = i === stack.length - 1;
+    const isHi = i === highlighted;
+    ctx.fillStyle = isHi ? '#fff176' : (isTop ? '#e8f5e9' : '#e3f2fd');
+    ctx.fillRect(startX, y, frameW, frameH);
+    ctx.strokeStyle = isTop ? '#66bb6a' : '#90caf9'; ctx.lineWidth = isTop ? 2 : 1;
+    ctx.strokeRect(startX, y, frameW, frameH);
+    ctx.lineWidth = 1;
+
+    ctx.fillStyle = '#333'; ctx.font = '12px monospace'; ctx.textAlign = 'left';
+    ctx.fillText(frame.label, startX + 10, y + 20);
+    ctx.fillStyle = '#888'; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('ret: 0x' + frame.ret.toString(16).padStart(4, '0'), startX + frameW - 8, y + 20);
+
+    ctx.fillStyle = '#aaa'; ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('depth ' + (i + 1), startX + 10, y + frameH - 4);
+  });
+
+  // overflow warning
+  if (stack.length >= MAX_DEPTH) {
+    ctx.fillStyle = '#c62828'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('STACK OVERFLOW — max depth reached!', canvas.width / 2, 30);
+  } else if (stack.length === 0) {
+    ctx.fillStyle = '#bbb'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Stack is empty', canvas.width / 2, stackBase - 20);
+  }
+}
+
+function updateMetrics() {
+  met.update({ depth: stack.length, max: MAX_DEPTH, pushed: pushCount, popped: popCount, 'top frame': stack.length > 0 ? stack[stack.length - 1].label : 'none' });
+  strip.push(0, stack.length);
+}
+
+SimLib.makeButton('Push frame', function () {
+  if (stack.length >= MAX_DEPTH) {
+    document.getElementById('status').textContent = 'Stack overflow! Cannot push more frames.';
+    return;
+  }
+  const label = FRAME_LABELS[stack.length % FRAME_LABELS.length];
+  const ret = 0x1000 + pushCount * 8;
+  stack.push({ label: label, ret: ret });
+  pushCount++;
+  highlighted = stack.length - 1;
+  document.getElementById('status').textContent = 'Pushed ' + label + ' (return addr: 0x' + ret.toString(16) + '). Depth: ' + stack.length + '.';
+  updateMetrics();
+  draw();
+  setTimeout(function () { highlighted = -1; draw(); }, 400);
+});
+
+SimLib.makeButton('Pop frame', function () {
+  if (stack.length === 0) {
+    document.getElementById('status').textContent = 'Stack is empty — nothing to pop.';
+    return;
+  }
+  const frame = stack.pop();
+  popCount++;
+  highlighted = -1;
+  document.getElementById('status').textContent = 'Popped ' + frame.label + '. Returning to 0x' + frame.ret.toString(16) + '. Depth: ' + stack.length + '.';
+  updateMetrics();
+  draw();
+});
+
+SimLib.makeButton('Simulate call chain', function () {
+  const n = 5;
+  let i = 0;
+  function pushNext() {
+    if (i >= n) {
+      let j = 0;
+      function popNext() {
+        if (j >= n) { document.getElementById('status').textContent = 'Call chain complete. All frames returned.'; return; }
+        if (stack.length > 0) {
+          const frame = stack.pop(); popCount++;
+          document.getElementById('status').textContent = 'Returned from ' + frame.label + '.';
+          updateMetrics(); draw();
+          j++;
+          setTimeout(popNext, 400);
+        }
+      }
+      setTimeout(popNext, 300);
+      return;
+    }
+    if (stack.length < MAX_DEPTH) {
+      const label = FRAME_LABELS[i % FRAME_LABELS.length];
+      stack.push({ label: label, ret: 0x1000 + pushCount * 8 });
+      pushCount++; highlighted = stack.length - 1;
+      document.getElementById('status').textContent = 'Calling ' + label + '…';
+      updateMetrics(); draw();
+      setTimeout(function () { highlighted = -1; draw(); }, 200);
+    }
+    i++;
+    setTimeout(pushNext, 450);
+  }
+  stack = []; pushCount = 0; popCount = 0; strip.reset();
+  pushNext();
+});
+
+SimLib.makeButton('Reset', function () {
+  stack = []; pushCount = 0; popCount = 0;
+  highlighted = -1;
+  strip.reset();
+  document.getElementById('status').textContent = 'Stack cleared.';
+  met.update({ depth: 0, max: MAX_DEPTH, pushed: 0, popped: 0, 'top frame': 'none' });
+  draw();
+});
+
+const met = SimLib.metrics();
+met.update({ depth: 0, max: MAX_DEPTH, pushed: 0, popped: 0, 'top frame': 'none' });
+draw();
 </script>
 </body>
 </html>

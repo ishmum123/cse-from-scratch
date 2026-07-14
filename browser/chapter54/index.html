@@ -5,43 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Attention Exists</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Attention Exists</h1>
-<p>Compute attention scores between query and keys.</p><div class="controls"><button id="score">Compute scores</button></div><canvas id="c" width="500" height="260"></canvas><div id="status">Attention weights show which tokens matter most.</div>
+<p>Fixed-window (last-N only): the model forgets tokens outside the window — distant referents are lost. Full attention: each token attends to all others — weight bars show which tokens the final token "looks at."</p>
+<div class="controls" id="controls"></div>
+<div id="status">Watch which tokens are visible when predicting the last token.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Fixed window (last 3 only)', 'Full attention', 320, 210);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'fixed visible', color:'#ef5350'},{label:'full visible', color:'#43a047'}], 80);
 
-const tokens = ['The','cat','sat'];
-const query = [0.5, 0.3, 0.2];
-const keys = [[0.4,0.4,0.2],[0.2,0.7,0.1],[0.3,0.3,0.4]];
-let scores = [0,0,0];
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  tokens.forEach((t, i) => {
-    ctx.fillStyle = '#e3f2fd'; ctx.fillRect(60, 40 + i * 70, 80, 40); ctx.strokeRect(60, 40 + i * 70, 80, 40);
-    ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t, 100, 65 + i * 70);
-    ctx.fillStyle = `rgba(239,83,80,${scores[i]})`; ctx.fillRect(180, 40 + i * 70, 60, 40); ctx.strokeRect(180, 40 + i * 70, 60, 40);
-    ctx.fillStyle = '#333'; ctx.fillText(scores[i].toFixed(2), 210, 65 + i * 70);
-  });
+var seqLen = 8;
+var windowSize = 3;
+var tickN = 0, lastTs = 0;
+
+// Simulate attention weights for last token attending to all others
+// Weight decays with distance but has a random "important" distant token
+function makeWeights(n) {
+  var w = [];
+  var importantIdx = Math.floor(Math.random() * Math.max(1, n - 3)); // distant important token
+  for (var i = 0; i < n; i++) {
+    var dist = (n - 1) - i;
+    var base = Math.exp(-dist * 0.3);
+    var boost = (i === importantIdx) ? 0.6 : 0;
+    w.push(base + boost + Math.random() * 0.05);
+  }
+  // normalise
+  var sum = w.reduce(function(a, b) { return a + b; }, 0);
+  return w.map(function(x) { return x / sum; });
 }
-function dot(a,b) { return a.reduce((s,v,i)=>s+v*b[i],0); }
-document.getElementById('score').onclick = () => {
-  scores = keys.map(k => Math.max(0, dot(query, k)));
-  const sum = scores.reduce((a,b)=>a+b,0);
-  scores = scores.map(s => sum ? s/sum : 0);
-  document.getElementById('status').textContent = 'Softmax scores computed.';
-  draw();
-};
-draw();
 
+var weights = makeWeights(seqLen);
+var importantAt = 0;
+
+function reset() {
+  tickN = 0;
+  weights = makeWeights(seqLen);
+  strip.reset();
+  met.update({ 'seq len': seqLen, 'window': windowSize, 'fixed visible': windowSize, 'full visible': seqLen });
+  document.getElementById('status').textContent = 'Running.';
+}
+
+function drawFixed(ctx, cv, n, win) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  var r = 13, spacing = (W - 20) / n;
+  for (var i = 0; i < n; i++) {
+    var x = 10 + i * spacing + spacing / 2;
+    var inWindow = i >= n - win;
+    ctx.beginPath(); ctx.arc(x, 55, r, 0, 2 * Math.PI);
+    ctx.fillStyle = inWindow ? '#c8e6c9' : '#ffcdd2';
+    ctx.fill(); ctx.strokeStyle = inWindow ? '#388e3c' : '#e53935'; ctx.stroke();
+    ctx.fillStyle = '#333'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('T' + (i + 1), x, 58);
+  }
+  // Mark last token as query
+  var qx = 10 + (n - 1) * spacing + spacing / 2;
+  ctx.strokeStyle = '#f9a825'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(qx, 55, r + 3, 0, 2 * Math.PI); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Query=T' + n + ' sees last ' + win + ' tokens', W / 2, 90);
+  ctx.fillStyle = '#e53935'; ctx.font = '10px sans-serif';
+  ctx.fillText('Distant tokens: INVISIBLE', W / 2, 108);
+  ctx.fillStyle = '#555';
+  ctx.fillText('Visible: ' + win + '/' + n, W / 2, 126);
+}
+
+function drawFull(ctx, cv, n, w) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  var r = 13, spacing = (W - 20) / n;
+  var maxW = Math.max.apply(null, w);
+  // Draw attention weight bars below tokens
+  for (var i = 0; i < n; i++) {
+    var x = 10 + i * spacing + spacing / 2;
+    var barH = Math.round((w[i] / maxW) * 50);
+    var alpha = Math.round(w[i] * 255);
+    ctx.fillStyle = 'rgba(33,150,243,' + (0.15 + w[i] * 0.85).toFixed(2) + ')';
+    ctx.fillRect(x - r, 75 - barH, r * 2, barH);
+    ctx.strokeStyle = '#1565c0'; ctx.strokeRect(x - r, 75 - barH, r * 2, barH);
+  }
+  for (var j = 0; j < n; j++) {
+    var xj = 10 + j * spacing + spacing / 2;
+    ctx.beginPath(); ctx.arc(xj, 45, r, 0, 2 * Math.PI);
+    ctx.fillStyle = '#c8e6c9'; ctx.fill(); ctx.strokeStyle = '#388e3c'; ctx.stroke();
+    ctx.fillStyle = '#333'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('T' + (j + 1), xj, 48);
+    // weight label
+    ctx.fillStyle = '#1565c0'; ctx.font = '7px sans-serif';
+    ctx.fillText((w[j] * 100).toFixed(0) + '%', xj, 90);
+  }
+  // Highlight query token
+  var qx = 10 + (n - 1) * spacing + spacing / 2;
+  ctx.strokeStyle = '#f9a825'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(qx, 45, r + 3, 0, 2 * Math.PI); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Query=T' + n + ' attends to ALL tokens', W / 2, 108);
+  ctx.fillStyle = '#2e7d32'; ctx.font = '10px sans-serif';
+  ctx.fillText('Visible: ' + n + '/' + n + ' (full context)', W / 2, 124);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 800) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts; tickN++;
+
+  // Refresh weights each tick
+  weights = makeWeights(seqLen);
+
+  strip.push(0, windowSize);
+  strip.push(1, seqLen);
+  drawFixed(ctxA, cvA, seqLen, windowSize);
+  drawFull(ctxB, cvB, seqLen, weights);
+  met.update({ 'seq len': seqLen, 'window': windowSize, 'fixed visible': windowSize, 'full visible': seqLen, 'context ratio': (seqLen / windowSize).toFixed(1) + 'x' });
+  document.getElementById('status').textContent =
+    'Seq=' + seqLen + ' | Fixed sees ' + windowSize + ' tokens | Attention sees all ' + seqLen;
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Seq length', 4, 16, 2, 8, function(v) { seqLen = v; windowSize = Math.min(windowSize, v); reset(); });
+SimLib.slider('Window size', 1, 8, 1, 3, function(v) { windowSize = Math.min(v, seqLen); reset(); });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId = requestAnimationFrame(frame);
 </script>
 </body>
 </html>

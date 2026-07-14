@@ -5,41 +5,92 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Context Switching Costs</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Context Switching Costs</h1>
-<p>Save one task state, restore another. More state means more cost.</p><div class="controls"><button id="switch">Context switch</button></div><canvas id="c" width="600" height="220"></canvas><div id="status">Switching means saving and restoring registers, caches, and TLB.</div>
+<p>Frequent switching wastes CPU time saving/restoring state. Longer quanta mean fewer switches but worse latency. Watch useful-work% vs switch overhead.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Running.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Short quantum (many switches)', 'Long quantum (few switches)', 320, 180);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'short useful%', color:'#ef5350'},{label:'long useful%', color:'#43a047'}], 80);
 
-let active = 0;
-const regs = [['r0:5','r1:3','pc:12'],['r0:9','r1:7','pc:44']];
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  regs.forEach((r, i) => {
-    ctx.fillStyle = i === active ? '#ffcc80' : '#e3f2fd';
-    ctx.fillRect(60 + i * 280, 50, 180, 130); ctx.strokeRect(60 + i * 280, 50, 180, 130);
-    ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Task ${i+1}`, 150 + i * 280, 80);
-    r.forEach((line, j) => { ctx.font = '14px sans-serif'; ctx.fillText(line, 150 + i * 280, 105 + j * 22); });
-  });
-}
-async function switchTask() {
-  document.getElementById('status').textContent = 'Saving task ' + (active+1) + ' state...';
-  await new Promise(r => setTimeout(r, 500));
-  active = (active + 1) % 2;
-  document.getElementById('status').textContent = 'Restored task ' + (active+1) + ' state.';
-  draw();
-}
-document.getElementById('switch').onclick = switchTask;
-draw();
+var switchCost = 20; // % of quantum spent switching
+var shortQ = 10;
+var longQ = 40;
+var tickN = 0, lastTs = 0;
+var shortWork=0, shortOverhead=0, longWork=0, longOverhead=0;
 
+function reset() {
+  tickN=0; shortWork=0; shortOverhead=0; longWork=0; longOverhead=0;
+  strip.reset();
+  met.update({tick:0,'short useful%':100,'long useful%':100,'switch cost':switchCost+'%'});
+  document.getElementById('status').textContent = 'Running.';
+}
+
+function drawGauge(ctx, cv, workPct, label, color) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, H=cv.height;
+  // bar
+  var barW=W-40, barH=30, bx=20, by=60;
+  ctx.fillStyle='#ffcdd2'; ctx.fillRect(bx,by,barW,barH);
+  ctx.fillStyle=color; ctx.fillRect(bx,by,barW*(workPct/100),barH);
+  ctx.strokeStyle='#bbb'; ctx.strokeRect(bx,by,barW,barH);
+  ctx.fillStyle='#333'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Useful work: '+workPct.toFixed(1)+'%', W/2, by-8);
+  ctx.fillText('Overhead: '+(100-workPct).toFixed(1)+'%', W/2, by+barH+18);
+  // switch visual
+  var switches = Math.round(100/parseInt(label)||0);
+  ctx.fillStyle='#555'; ctx.font='10px sans-serif';
+  ctx.fillText(label, W/2, H-6);
+}
+
+function frame(ts) {
+  if (ts-lastTs<300) { state.rafId=requestAnimationFrame(frame); return; }
+  lastTs=ts; tickN++;
+
+  // short quantum
+  var sOH = switchCost; // overhead per quantum in %
+  var sUseful = Math.max(0, 100-sOH);
+  shortWork += sUseful; shortOverhead += sOH;
+
+  // long quantum: switch cost amortised over longer run
+  var lOH = switchCost * (shortQ/longQ);
+  var lUseful = Math.max(0, 100-lOH);
+  longWork += lUseful; longOverhead += lOH;
+
+  var su = sUseful, lu = lUseful;
+  strip.push(0, su);
+  strip.push(1, lu);
+  drawGauge(ctxA, cvA, su, 'quantum='+shortQ+' cost='+switchCost+'%', '#ef9a9a');
+  drawGauge(ctxB, cvB, lu, 'quantum='+longQ+' cost='+(lOH).toFixed(1)+'%', '#a5d6a7');
+  met.update({tick:tickN,'short useful%':su.toFixed(1),'long useful%':lu.toFixed(1),
+    'switch cost':switchCost+'%'});
+  document.getElementById('status').textContent =
+    'Short quantum useful: '+su.toFixed(1)+'% | Long quantum useful: '+lu.toFixed(1)+'%';
+
+  if (!state.paused) state.rafId=requestAnimationFrame(frame);
+}
+
+SimLib.slider('Switch cost %', 5, 50, 5, 20, function(v){ switchCost=v; });
+SimLib.slider('Short quantum', 5, 20, 5, 10, function(v){ shortQ=v; });
+SimLib.slider('Long quantum', 20, 80, 10, 40, function(v){ longQ=v; });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId=requestAnimationFrame(frame);
 </script>
 </body>
 </html>

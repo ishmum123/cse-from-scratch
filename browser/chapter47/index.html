@@ -5,41 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why CDNs Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why CDNs Exist</h1>
-<p>Route users to the nearest edge server.</p><div class="controls"><button id="request">Request from user</button></div><canvas id="c" width="600" height="260"></canvas><div id="status">CDNs reduce latency by serving content from nearby edges.</div>
+<p>No CDN: every user fetches from distant origin — high latency. CDN edge cache: content served from nearby PoP — latency drops, but stale content is possible after updates.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Watch latency and staleness across edge nodes.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'No CDN (origin only)', 'CDN edge cache', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'origin latency', color:'#ef5350'},{label:'cdn latency', color:'#43a047'}], 80);
 
-const user = {x:80,y:200};
-const edges = [{x:200,y:80},{x:420,y:100}];
-const origin = {x:300,y:220};
-let lastEdge = null;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath(); ctx.arc(user.x, user.y, 12, 0, Math.PI*2); ctx.fillStyle = '#90caf9'; ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('User', user.x, user.y + 28);
-  edges.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, 15, 0, Math.PI*2); ctx.fillStyle = '#c8e6c9'; ctx.fill(); ctx.stroke(); ctx.fillText('Edge', e.x, e.y + 28); });
-  ctx.beginPath(); ctx.arc(origin.x, origin.y, 18, 0, Math.PI*2); ctx.fillStyle = '#ffcc80'; ctx.fill(); ctx.stroke(); ctx.fillText('Origin', origin.x, origin.y + 32);
-  if (lastEdge) { ctx.beginPath(); ctx.moveTo(user.x, user.y); ctx.lineTo(lastEdge.x, lastEdge.y); ctx.strokeStyle = '#1976d2'; ctx.stroke(); ctx.strokeStyle = '#000'; }
+var numEdges = 3;
+var ttlTicks = 5;
+var originLatency = 120;
+var tickN = 0, lastTs = 0;
+var edgeCaches = [];
+var originVersion = 0;
+var totalStale = 0;
+
+function reset() {
+  tickN = 0; originVersion = 0; totalStale = 0;
+  edgeCaches = [];
+  for (var i = 0; i < numEdges; i++) edgeCaches.push({ version: 0, age: 0 });
+  strip.reset();
+  met.update({ tick: 0, 'origin lat': originLatency + 'ms', 'cdn lat': '5ms', stale: 0 });
+  document.getElementById('status').textContent = 'Running.';
 }
-document.getElementById('request').onclick = () => {
-  const d1 = Math.hypot(user.x - edges[0].x, user.y - edges[0].y);
-  const d2 = Math.hypot(user.x - edges[1].x, user.y - edges[1].y);
-  lastEdge = d1 < d2 ? edges[0] : edges[1];
-  document.getElementById('status').textContent = `Routed to nearest edge.`;
-  draw();
-};
-draw();
 
+function drawEdges(ctx, cv, edges, originV, staleCount, iscdn) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  // Origin
+  ctx.fillStyle = '#e3f2fd'; ctx.fillRect(W / 2 - 40, 10, 80, 36);
+  ctx.strokeStyle = '#1565c0'; ctx.strokeRect(W / 2 - 40, 10, 80, 36);
+  ctx.fillStyle = '#333'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Origin', W / 2, 25); ctx.fillText('v=' + originV, W / 2, 40);
+
+  if (!iscdn) {
+    ctx.fillStyle = '#555'; ctx.font = '11px sans-serif';
+    ctx.fillText('Latency: ' + originLatency + 'ms per request', W / 2, 100);
+    ctx.fillText('No edge — all traffic to origin', W / 2, 120);
+    return;
+  }
+
+  var spacing = (W - 20) / edges.length;
+  for (var i = 0; i < edges.length; i++) {
+    var ex = 10 + i * spacing + spacing / 2;
+    var stale = edges[i].version < originV;
+    ctx.fillStyle = stale ? '#fff9c4' : '#c8e6c9';
+    ctx.fillRect(ex - 28, 70, 56, 40);
+    ctx.strokeStyle = '#bbb'; ctx.strokeRect(ex - 28, 70, 56, 40);
+    ctx.fillStyle = '#333'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Edge' + (i + 1), ex, 83);
+    ctx.font = '9px monospace'; ctx.fillText('v=' + edges[i].version, ex, 96);
+    if (stale) { ctx.fillStyle = '#f57f17'; ctx.font = '8px sans-serif'; ctx.fillText('STALE', ex, 108); }
+    // line from origin
+    ctx.strokeStyle = '#ccc'; ctx.beginPath(); ctx.moveTo(W / 2, 46); ctx.lineTo(ex, 70); ctx.stroke();
+  }
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('stale edges: ' + staleCount, W / 2, 145);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 450) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts; tickN++;
+
+  // Occasionally update origin
+  if (Math.random() < 0.2) originVersion++;
+
+  // Edges: each has a TTL; when expired, re-fetch from origin
+  var staleNow = 0;
+  for (var i = 0; i < edgeCaches.length; i++) {
+    edgeCaches[i].age++;
+    if (edgeCaches[i].age >= ttlTicks) {
+      edgeCaches[i].version = originVersion;
+      edgeCaches[i].age = 0;
+    }
+    if (edgeCaches[i].version < originVersion) staleNow++;
+  }
+  totalStale += staleNow;
+
+  var cdnLatency = 5;
+  strip.push(0, originLatency);
+  strip.push(1, cdnLatency);
+  drawEdges(ctxA, cvA, [], originVersion, 0, false);
+  drawEdges(ctxB, cvB, edgeCaches, originVersion, staleNow, true);
+  met.update({ tick: tickN, 'origin lat': originLatency + 'ms', 'cdn lat': cdnLatency + 'ms', 'stale edges': staleNow });
+  document.getElementById('status').textContent =
+    'Origin v' + originVersion + ' | CDN latency: ' + cdnLatency + 'ms vs origin: ' + originLatency + 'ms | Stale edges: ' + staleNow;
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Edge nodes', 1, 5, 1, 3, function(v) { numEdges = v; reset(); });
+SimLib.slider('TTL ticks', 2, 10, 1, 5, function(v) { ttlTicks = v; });
+SimLib.slider('Origin latency ms', 40, 200, 20, 120, function(v) { originLatency = v; });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId = requestAnimationFrame(frame);
 </script>
 </body>
 </html>

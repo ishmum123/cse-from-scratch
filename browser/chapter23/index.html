@@ -5,35 +5,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Processes Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Processes Exist</h1>
-<p>Two processes have isolated memory. Crash one, the other survives.</p><div class="controls"><button id="crashA">Crash A</button><button id="crashB">Crash B</button><button id="reset">Reset</button></div><canvas id="c" width="600" height="220"></canvas><div id="status">Processes isolate memory so failures do not spread.</div>
+<p>No isolation: one crash corrupts shared memory and kills everything. Processes give each program its own address space so failures stay contained.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press a Crash button to simulate a fault.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'No Isolation (monolith)', 'Process Isolation', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
 
-let alive = {A: true, B: true};
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ['A','B'].forEach((p, i) => {
-    ctx.fillStyle = alive[p] ? '#c8e6c9' : '#ffcdd2';
-    ctx.fillRect(50 + i * 260, 50, 200, 140); ctx.strokeRect(50 + i * 260, 50, 200, 140);
-    ctx.fillStyle = '#333'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Process ${p}`, 150 + i * 260, 90);
-    ctx.font = '14px sans-serif'; ctx.fillText(alive[p] ? 'Memory: isolated' : 'CRASHED', 150 + i * 260, 120);
-  });
+var numProcs = 4;
+var monoState = [], isoState = [];
+
+function reset() {
+  monoState = [];
+  isoState = [];
+  for (var i=0; i<numProcs; i++) {
+    monoState.push({name:'P'+(i+1), alive:true});
+    isoState.push({name:'P'+(i+1), alive:true});
+  }
+  draw();
+  met.update({'mono alive':numProcs,'iso alive':numProcs,crashes:0});
+  document.getElementById('status').textContent = 'All processes healthy.';
 }
-document.getElementById('crashA').onclick = () => { alive.A = false; draw(); };
-document.getElementById('crashB').onclick = () => { alive.B = false; draw(); };
-document.getElementById('reset').onclick = () => { alive = {A:true,B:true}; draw(); };
-draw();
 
+var crashes = 0;
+
+function drawSide(ctx, cv, procs, title) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, cellH=32, pad=10;
+  var cols=2, rows=Math.ceil(procs.length/cols);
+  var bw=(W-pad*3)/cols, bh=cellH;
+  procs.forEach(function(p,i){
+    var col=i%cols, row=Math.floor(i/cols);
+    var x=pad+col*(bw+pad), y=28+row*(bh+6);
+    ctx.fillStyle = p.alive ? '#c8e6c9' : '#ffcdd2';
+    ctx.fillRect(x,y,bw,bh);
+    ctx.strokeStyle='#bbb'; ctx.strokeRect(x,y,bw,bh);
+    ctx.fillStyle='#333'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(p.name+(p.alive ? ' OK' : ' CRASHED'), x+bw/2, y+bh/2+4);
+  });
+  ctx.fillStyle='#555'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(title, W/2, 16);
+}
+
+function draw() {
+  drawSide(ctxA, cvA, monoState, 'Monolith — crash spreads');
+  drawSide(ctxB, cvB, isoState, 'Isolated — only victim dies');
+}
+
+function crashRandom() {
+  var victim = Math.floor(Math.random()*numProcs);
+  crashes++;
+  // monolith: all die
+  monoState.forEach(function(p){ p.alive = false; });
+  // isolated: only victim dies
+  isoState[victim].alive = false;
+  draw();
+  met.update({'mono alive':0,'iso alive':isoState.filter(function(p){return p.alive;}).length,crashes:crashes});
+  document.getElementById('status').textContent =
+    'P'+(victim+1)+' crashed. Monolith: all gone. Isolated: '+(numProcs-1)+' survivors.';
+}
+
+SimLib.slider('Processes', 2, 6, 1, 4, function(v){ numProcs=v; reset(); });
+SimLib.makeButton('Crash random', crashRandom);
+SimLib.makeButton('Reset', reset);
+var met = SimLib.metrics();
+reset();
 </script>
 </body>
 </html>

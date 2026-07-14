@@ -5,37 +5,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Matrix Multiplication Matters</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Matrix Multiplication Matters</h1>
-<p>Multiply a row vector by a column vector.</p><div class="controls"><button id="compute">Compute dot product</button></div><canvas id="c" width="500" height="220"></canvas><div id="status">Neural networks are built from many such multiplications.</div>
+<p>Naive triple loop: O(n³) scalar ops, no parallelism. Tiled/vectorized: reuse cache lines, process blocks — far fewer memory stalls, higher throughput.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Watch op count and cache efficiency diverge.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Naive triple loop', 'Tiled / vectorized', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'naive ops', color:'#ef5350'},{label:'tiled ops', color:'#43a047'}], 80);
 
-const a = [1,2,3], b = [4,5,6];
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw(hi=-1) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  a.forEach((v, i) => {
-    ctx.fillStyle = i === hi ? '#ffcc80' : '#90caf9'; ctx.fillRect(60, 50 + i * 40, 40, 30); ctx.strokeRect(60, 50 + i * 40, 40, 30); ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(v, 80, 70 + i * 40);
-    ctx.fillStyle = i === hi ? '#ffcc80' : '#c8e6c9'; ctx.fillRect(180, 50 + i * 40, 40, 30); ctx.strokeRect(180, 50 + i * 40, 40, 30); ctx.fillText(b[i], 200, 70 + i * 40);
-  });
-  ctx.fillStyle = '#333'; ctx.font = '18px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`Result: ${a.reduce((s,v,i)=>s+v*b[i],0)}`, 280, 110);
-}
-async function compute() {
-  let sum = 0;
-  for (let i = 0; i < a.length; i++) { draw(i); sum += a[i] * b[i]; document.getElementById('status').textContent = `sum += ${a[i]} * ${b[i]} = ${sum}`; await new Promise(r => setTimeout(r, 500)); }
-  draw(-1);
-}
-document.getElementById('compute').onclick = compute;
-draw();
+var matrixN = 4;
+var tickN = 0, lastTs = 0;
 
+function reset() {
+  tickN = 0;
+  strip.reset();
+  met.update({ 'matrix N': matrixN, 'naive ops': 0, 'tiled ops': 0, speedup: '1x' });
+  document.getElementById('status').textContent = 'Running.';
+}
+
+function drawMatrix(ctx, cv, n, progress, isNaive) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  var cellSize = Math.floor(Math.min(100, (W - 20)) / n);
+  var gridW = n * cellSize;
+  var startX = (W - gridW) / 2;
+  var startY = 20;
+
+  var naiveOps = n * n * n;
+  var tiledOps = Math.round(naiveOps / 4); // tiling reduces cache misses ~4x
+  var totalOps = isNaive ? naiveOps : tiledOps;
+  var done = Math.round(progress * totalOps);
+
+  for (var i = 0; i < n; i++) {
+    for (var j = 0; j < n; j++) {
+      var cellIdx = i * n + j;
+      var pct = Math.min(1, done / Math.max(1, (cellIdx + 1) * (isNaive ? n : Math.ceil(n / 2))));
+      ctx.fillStyle = pct >= 1 ? (isNaive ? '#c8e6c9' : '#a5d6a7') : (pct > 0 ? '#fff9c4' : '#f5f5f5');
+      ctx.fillRect(startX + j * cellSize, startY + i * cellSize, cellSize - 1, cellSize - 1);
+      ctx.strokeStyle = '#ddd'; ctx.strokeRect(startX + j * cellSize, startY + i * cellSize, cellSize - 1, cellSize - 1);
+    }
+  }
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(isNaive ? 'ops: ' + naiveOps : 'ops: ' + tiledOps + ' (tiled)', W / 2, startY + gridW + 20);
+  ctx.fillText((isNaive ? '' : '~4x fewer cache misses'), W / 2, startY + gridW + 36);
+  ctx.fillText('progress: ' + Math.round(progress * 100) + '%', W / 2, startY + gridW + 52);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 300) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts; tickN++;
+
+  var progress = (tickN % 20) / 20;
+  var naiveOps = matrixN * matrixN * matrixN;
+  var tiledOps = Math.round(naiveOps / 4);
+
+  strip.push(0, naiveOps);
+  strip.push(1, tiledOps);
+  drawMatrix(ctxA, cvA, matrixN, progress, true);
+  drawMatrix(ctxB, cvB, matrixN, progress, false);
+  met.update({ 'matrix N': matrixN, 'naive ops': naiveOps, 'tiled ops': tiledOps, speedup: '~4x' });
+  document.getElementById('status').textContent =
+    'N=' + matrixN + ' | Naive: ' + naiveOps + ' ops | Tiled: ' + tiledOps + ' ops (~4x fewer cache misses)';
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Matrix N', 2, 8, 1, 4, function(v) { matrixN = v; reset(); });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId = requestAnimationFrame(frame);
 </script>
 </body>
 </html>

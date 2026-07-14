@@ -5,46 +5,128 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Looking Is Slow</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Looking Is Slow</h1>
-<p>Search for a target value one item at a time.</p><div class="controls"><input id="target" type="number" placeholder="Target" value="42"><button id="search">Search</button></div><canvas id="c" width="700" height="150"></canvas><div id="status">Enter a target and search.</div>
+<p>Unordered search must check every item. Adjust array size to see how comparisons scale.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Search to animate.</div>
+<canvas id="c" width="700" height="160"></canvas>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
-
-const arr = Array.from({length: 12}, () => Math.floor(Math.random() * 100));
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-function draw(hi=-1, found=false) {
+const strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{ label: 'comparisons', color: '#ef5350' }], 40);
+
+let size = 14;
+let arr = [];
+let target = 0;
+let step = -1;
+let found = -1;
+let rafId = null;
+let lastTick = 0;
+
+function buildArray() {
+  arr = Array.from({ length: size }, function () { return Math.floor(Math.random() * 90 + 5); });
+  // ensure target is somewhere in the array
+  const pos = Math.floor(Math.random() * size);
+  target = arr[pos];
+  step = -1; found = -1;
+  strip.reset();
+  draw();
+  document.getElementById('status').textContent = 'Searching for ' + target + ' in ' + size + ' items. Press Search.';
+  met.update({ 'array size': size, target: target, comparisons: 0, result: '—' });
+}
+
+function cellWidth() { return Math.min(44, Math.floor((canvas.width - 20) / size)); }
+
+function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  arr.forEach((v, i) => {
-    ctx.fillStyle = i === hi ? (found ? '#66bb6a' : '#ffcc80') : '#e3f2fd';
-    ctx.fillRect(10 + i * 57, 40, 50, 50);
-    ctx.strokeRect(10 + i * 57, 40, 50, 50);
+  const cw = cellWidth();
+  const startX = Math.floor((canvas.width - cw * size) / 2);
+  const cellY = 40, cellH = 56;
+
+  ctx.fillStyle = '#666';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Searching for: ' + target, canvas.width / 2, 26);
+
+  arr.forEach(function (v, i) {
+    const x = startX + i * cw;
+    const past = i < step;
+    const current = i === step;
+    const isFound = i === found;
+    ctx.fillStyle = isFound ? '#c8e6c9' : (current ? '#fff176' : (past ? '#ffcdd2' : '#f5f5f5'));
+    ctx.fillRect(x, cellY, cw - 2, cellH);
+    ctx.strokeStyle = current ? '#f57f17' : (isFound ? '#388e3c' : '#ccc');
+    ctx.lineWidth = (current || isFound) ? 2 : 1;
+    ctx.strokeRect(x, cellY, cw - 2, cellH);
+    ctx.lineWidth = 1;
     ctx.fillStyle = '#333';
-    ctx.font = '16px sans-serif';
+    ctx.font = 'bold ' + Math.min(14, cw - 6) + 'px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(v, 35 + i * 57, 70);
+    ctx.fillText(v, x + cw / 2 - 1, cellY + 34);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '9px sans-serif';
+    ctx.fillText(i, x + cw / 2 - 1, cellY + cellH - 4);
   });
 }
-async function search() {
-  const t = parseInt(document.getElementById('target').value);
-  for (let i = 0; i < arr.length; i++) {
-    draw(i, arr[i] === t);
-    document.getElementById('status').textContent = `Checking index ${i}...`;
-    await new Promise(r => setTimeout(r, 300));
-    if (arr[i] === t) { document.getElementById('status').textContent = `Found ${t} at index ${i}.`; return; }
-  }
-  document.getElementById('status').textContent = `${t} not found.`;
-}
-document.getElementById('search').onclick = search;
-draw();
 
+function tick(ts) {
+  if (ts - lastTick > 250) {
+    lastTick = ts;
+    step++;
+    if (step >= size) {
+      found = -1;
+      document.getElementById('status').textContent = target + ' not found after ' + size + ' comparisons.';
+      met.update({ 'array size': size, target: target, comparisons: size, result: 'not found' });
+      step = size - 1;
+      draw();
+      rafId = null;
+      return;
+    }
+    strip.push(0, step + 1);
+    if (arr[step] === target) {
+      found = step;
+      draw();
+      document.getElementById('status').textContent = 'Found ' + target + ' at index ' + step + ' after ' + (step + 1) + ' comparison(s).';
+      met.update({ 'array size': size, target: target, comparisons: step + 1, result: 'found at ' + step });
+      rafId = null;
+      return;
+    }
+    met.update({ 'array size': size, target: target, comparisons: step + 1, result: 'searching…' });
+    draw();
+    rafId = requestAnimationFrame(tick);
+  } else {
+    rafId = requestAnimationFrame(tick);
+  }
+}
+
+function reset() {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  buildArray();
+}
+
+SimLib.slider('Array size', 4, 20, 1, 14, function (v) { size = v; reset(); });
+SimLib.makeButton('Search', function () {
+  if (rafId) { cancelAnimationFrame(rafId); }
+  step = -1; found = -1; strip.reset(); draw();
+  lastTick = 0;
+  rafId = requestAnimationFrame(tick);
+});
+SimLib.makeButton('New array', function () { buildArray(); });
+SimLib.makeButton('Reset', reset);
+
+const met = SimLib.metrics();
+buildArray();
 </script>
 </body>
 </html>

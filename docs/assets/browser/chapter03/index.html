@@ -1,1 +1,107 @@
-../../../../browser/chapter03/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Arrays Exist</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Arrays Exist</h1>
+<p>An array stores many values under one name at contiguous addresses. Access any element in O(1) by index.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Click an element to access it.</div>
+<canvas id="c" width="700" height="180"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let size = 10;
+let arr = [];
+let highlight = -1;
+
+function buildArray() {
+  arr = Array.from({ length: size }, function () { return Math.floor(Math.random() * 90 + 10); });
+  highlight = -1;
+  draw();
+}
+
+function cellWidth() { return Math.min(60, Math.floor((canvas.width - 20) / size)); }
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const cw = cellWidth();
+  const startX = Math.floor((canvas.width - cw * size) / 2);
+  const cellY = 50;
+  const cellH = 60;
+
+  ctx.fillStyle = '#999';
+  ctx.font = '11px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('base addr 0x1000', startX, 42);
+
+  arr.forEach(function (v, i) {
+    const x = startX + i * cw;
+    const isHi = i === highlight;
+    ctx.fillStyle = isHi ? '#fff59d' : '#e3f2fd';
+    ctx.fillRect(x, cellY, cw - 2, cellH);
+    ctx.strokeStyle = isHi ? '#f57f17' : '#90caf9';
+    ctx.lineWidth = isHi ? 2 : 1;
+    ctx.strokeRect(x, cellY, cw - 2, cellH);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold ' + Math.min(16, cw - 8) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(v, x + cw / 2 - 1, cellY + 37);
+    ctx.fillStyle = '#888';
+    ctx.font = '10px sans-serif';
+    ctx.fillText('[' + i + ']', x + cw / 2 - 1, cellY + cellH + 14);
+    ctx.fillStyle = '#bbb';
+    ctx.font = '9px monospace';
+    ctx.fillText((0x1000 + i * 4).toString(16), x + cw / 2 - 1, cellY + cellH + 26);
+  });
+
+  if (highlight >= 0) {
+    ctx.fillStyle = '#f57f17';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('arr[' + highlight + '] = ' + arr[highlight] + '  addr: 0x' + (0x1000 + highlight * 4).toString(16), canvas.width / 2, 30);
+  }
+}
+
+canvas.addEventListener('click', function (e) {
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left;
+  const cw = cellWidth();
+  const startX = Math.floor((canvas.width - cw * size) / 2);
+  const i = Math.floor((x - startX) / cw);
+  if (i >= 0 && i < size) {
+    highlight = i;
+    document.getElementById('status').textContent = 'Accessed arr[' + i + '] = ' + arr[i] + ' — address = base + ' + i + '×4';
+    met.update({ index: i, value: arr[i], address: '0x' + (0x1000 + i * 4).toString(16), 'cost': 'O(1)' });
+    draw();
+  }
+});
+
+SimLib.slider('Array size', 4, 16, 1, 10, function (v) {
+  size = v;
+  buildArray();
+  met.update({ index: '—', value: '—', address: '—', cost: 'O(1)' });
+});
+SimLib.makeButton('Randomize', function () {
+  buildArray();
+  met.update({ index: '—', value: '—', address: '—', cost: 'O(1)' });
+});
+
+const met = SimLib.metrics();
+met.update({ index: '—', value: '—', address: '—', cost: 'O(1)' });
+buildArray();
+</script>
+</body>
+</html>

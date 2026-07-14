@@ -5,43 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why MVCC Exists</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why MVCC Exists</h1>
-<p>A reader sees a snapshot while a writer creates a new version.</p><div class="controls"><button id="write">Writer updates</button><button id="read">Reader reads snapshot</button></div><canvas id="c" width="600" height="220"></canvas><div id="status">MVCC lets readers and writers proceed without blocking.</div>
+<p>Blocking reads (locking): writer blocks all readers. MVCC snapshot isolation: readers see a consistent snapshot and never block writers.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Running — watch throughput diverge when writer is active.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Blocking reads (locking)', 'MVCC snapshot reads', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'lock throughput', color:'#ef5350'},{label:'MVCC throughput', color:'#43a047'}], 80);
 
-let current = 10;
-const versions = [{value:10, tx:1}];
-let nextTx = 2;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  versions.forEach((v, i) => {
-    ctx.fillStyle = i === versions.length - 1 ? '#c8e6c9' : '#fff9c4';
-    ctx.fillRect(40 + i * 120, 80, 100, 60); ctx.strokeRect(40 + i * 120, 80, 100, 60);
-    ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`tx ${v.tx}`, 90 + i * 120, 105); ctx.fillText(`value ${v.value}`, 90 + i * 120, 130);
-  });
+var numReaders = 3;
+var writerActive = false;
+var tickN=0, lastTs=0;
+var lockTotal=0, mvccTotal=0;
+// MVCC versions
+var versions = [{txId:1, value:100}];
+var nextTxId = 2;
+// lock writer duration
+var writerTicksLeft = 0;
+var writerDuration = 4;
+
+function reset() {
+  tickN=0; lockTotal=0; mvccTotal=0; writerActive=false; writerTicksLeft=0;
+  versions=[{txId:1,value:100}]; nextTxId=2;
+  strip.reset();
+  met.update({tick:0,'lock tput':0,'MVCC tput':0,versions:1,blocked:0});
+  document.getElementById('status').textContent = 'Running. Press "Writer writes" to start a write.';
 }
-document.getElementById('write').onclick = () => {
-  current += 5;
-  versions.push({value: current, tx: nextTx++});
-  document.getElementById('status').textContent = `Writer created new version ${current}.`;
-  draw();
-};
-document.getElementById('read').onclick = () => {
-  const snap = versions[0];
-  document.getElementById('status').textContent = `Reader sees snapshot tx ${snap.tx}: value ${snap.value} (unchanged).`;
-};
-draw();
 
+function drawSide(ctx, cv, readers, writerOn, lockBlocked, label, versions) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width;
+  // writer bar
+  ctx.fillStyle=writerOn?'#ef9a9a':'#e8f5e9';
+  ctx.fillRect(10,8,W-20,22);
+  ctx.strokeStyle='#bbb'; ctx.strokeRect(10,8,W-20,22);
+  ctx.fillStyle='#333'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(writerOn?'Writer ACTIVE (holds lock)':'Writer idle', W/2, 23);
+  // reader lanes
+  var rColors=['#90caf9','#a5d6a7','#ffe082'];
+  for (var i=0;i<readers;i++) {
+    var blocked=lockBlocked&&writerOn;
+    ctx.fillStyle=blocked?'#ffcdd2':rColors[i%rColors.length];
+    ctx.fillRect(10, 40+i*36, W-20, 28);
+    ctx.strokeStyle='#bbb'; ctx.strokeRect(10,40+i*36,W-20,28);
+    ctx.fillStyle='#333'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+    if (blocked) {
+      ctx.fillText('Reader '+(i+1)+': BLOCKED (waiting for writer)', W/2, 40+i*36+17);
+    } else {
+      var ver=versions?versions[0]:{txId:1,value:100};
+      ctx.fillText('Reader '+(i+1)+': reading v'+ver.txId+' = '+ver.value, W/2, 40+i*36+17);
+    }
+  }
+  ctx.fillStyle='#555'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(label, W/2, cv.height-6);
+}
+
+function frame(ts) {
+  if(ts-lastTs<400){state.rafId=requestAnimationFrame(frame);return;}
+  lastTs=ts; tickN++;
+
+  // writer ticks down
+  if (writerTicksLeft>0) { writerActive=true; writerTicksLeft--; }
+  else { writerActive=false; }
+
+  // locking: if writer active, all readers blocked (0 ops); else numReaders ops
+  var lockOps = writerActive ? 0 : numReaders;
+  // MVCC: readers always read (use snapshot); writer creates new version
+  var mvccOps = numReaders;
+  if (writerActive && tickN%4===0) {
+    versions.unshift({txId:nextTxId++, value: versions[0].value + Math.floor(Math.random()*20)-5});
+    if (versions.length>4) versions.pop();
+  }
+
+  lockTotal+=lockOps; mvccTotal+=mvccOps;
+  strip.push(0,lockOps);
+  strip.push(1,mvccOps);
+
+  drawSide(ctxA, cvA, numReaders, writerActive, true, 'lock throughput: '+lockOps+'/tick', [{txId:1,value:100}]);
+  drawSide(ctxB, cvB, numReaders, writerActive, false, 'MVCC throughput: '+mvccOps+'/tick', versions);
+  met.update({tick:tickN,'lock tput':lockTotal,'MVCC tput':mvccTotal,
+    versions:versions.length,blocked:writerActive?numReaders:0});
+  document.getElementById('status').textContent =
+    (writerActive?'Writer active — locking blocks '+numReaders+' readers; MVCC unaffected.':
+    'Writer idle — both serve '+numReaders+' readers/tick.');
+
+  if(!state.paused) state.rafId=requestAnimationFrame(frame);
+}
+
+SimLib.slider('Readers', 1, 5, 1, 3, function(v){ numReaders=v; });
+SimLib.slider('Writer duration', 2, 8, 1, 4, function(v){ writerDuration=v; });
+SimLib.makeButton('Writer writes', function(){
+  writerTicksLeft=writerDuration; writerActive=true;
+  document.getElementById('status').textContent='Writer writing for '+writerDuration+' ticks…';
+});
+var state=SimLib.pauseResumeReset(frame,reset);
+var met=SimLib.metrics();
+reset();
+state.rafId=requestAnimationFrame(frame);
 </script>
 </body>
 </html>

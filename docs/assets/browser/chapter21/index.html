@@ -1,1 +1,120 @@
-../../../../browser/chapter21/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Queues Exist</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Queues Exist</h1>
+<p>Stack (LIFO) vs Queue (FIFO) under the same arrival stream. Queue serves fairly; stack starves early arrivals.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Running — watch avg wait diverge.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Stack (LIFO — unfair)', 'Queue (FIFO — fair)', 320, 180);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'stack avg-wait', color:'#ef5350'}, {label:'queue avg-wait', color:'#43a047'}], 80);
+
+var arrivalRate = 3;
+var serviceRate = 2;
+var tickN = 0;
+var stackQ = [], queueQ = [];
+var stackWaits = [], queueWaits = [];
+var lastTs = 0;
+
+function reset() {
+  tickN = 0; stackQ = []; queueQ = [];
+  stackWaits = []; queueWaits = [];
+  strip.reset();
+  met.update({tick:0,'stack depth':0,'queue depth':0,'stack avg-wait':'—','queue avg-wait':'—'});
+  document.getElementById('status').textContent = 'Running.';
+}
+
+function avgWait(arr) {
+  if (!arr.length) return '—';
+  return (arr.reduce(function(s,v){return s+v;},0)/arr.length).toFixed(1);
+}
+
+function drawSide(ctx, cv, items, color) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, cellH=19, startY=28, maxShow=7;
+  var shown = items.slice(-maxShow);
+  shown.forEach(function(item,i){
+    ctx.fillStyle = color;
+    ctx.fillRect(W/2-55, startY+i*cellH, 110, cellH-2);
+    ctx.strokeStyle='#ccc'; ctx.strokeRect(W/2-55, startY+i*cellH, 110, cellH-2);
+    ctx.fillStyle='#333'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('job#'+item.id+' arr='+item.arrived, W/2, startY+i*cellH+13);
+  });
+  if (!shown.length) {
+    ctx.fillStyle='#aaa'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('(empty)', W/2, cv.height/2);
+  }
+  ctx.fillStyle='#555'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('depth: '+items.length, W/2, cv.height-6);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 500) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts;
+  tickN++;
+
+  // arrivals shared between both sides
+  var newJobs = [];
+  var n = Math.random() < (arrivalRate/10) ? 1+Math.floor(Math.random()*2) : 0;
+  for (var i=0; i<n; i++) {
+    newJobs.push({id: tickN*10+i, arrived: tickN});
+  }
+  newJobs.forEach(function(j){
+    stackQ.push({id:j.id, arrived:j.arrived});
+    queueQ.push({id:j.id, arrived:j.arrived});
+  });
+
+  // service: stack pops from end (LIFO); queue shifts from front (FIFO)
+  for (var s=0; s<serviceRate; s++) {
+    if (stackQ.length) {
+      var sv = stackQ.pop();
+      stackWaits.push(tickN - sv.arrived);
+      if (stackWaits.length > 60) stackWaits.shift();
+    }
+    if (queueQ.length) {
+      var qv = queueQ.shift();
+      queueWaits.push(tickN - qv.arrived);
+      if (queueWaits.length > 60) queueWaits.shift();
+    }
+  }
+
+  var sw = avgWait(stackWaits), qw = avgWait(queueWaits);
+  strip.push(0, parseFloat(sw)||0);
+  strip.push(1, parseFloat(qw)||0);
+  drawSide(ctxA, cvA, stackQ, '#ffcdd2');
+  drawSide(ctxB, cvB, queueQ, '#c8e6c9');
+  met.update({tick:tickN,'stack depth':stackQ.length,'queue depth':queueQ.length,
+    'stack avg-wait':sw,'queue avg-wait':qw});
+  document.getElementById('status').textContent =
+    'Stack avg wait: '+sw+' ticks | Queue avg wait: '+qw+' ticks';
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Arrival rate', 1, 6, 1, 3, function(v){ arrivalRate=v; });
+SimLib.slider('Service rate', 1, 4, 1, 2, function(v){ serviceRate=v; });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+met.update({tick:0,'stack depth':0,'queue depth':0,'stack avg-wait':'—','queue avg-wait':'—'});
+state.rafId = requestAnimationFrame(frame);
+</script>
+</body>
+</html>

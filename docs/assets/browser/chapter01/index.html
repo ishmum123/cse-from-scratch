@@ -1,1 +1,96 @@
-../../../../browser/chapter01/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Counting Exists</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Counting Exists</h1>
+<p>Click stones to assign each a stable symbol. Use the slider to add more.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Count: 0 / 0</div>
+<canvas id="c" width="700" height="220"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let stoneCount = 12;
+let stones = [];
+let count = 0;
+
+function buildStones() {
+  stones = [];
+  count = 0;
+  const cols = Math.min(stoneCount, 10);
+  const rows = Math.ceil(stoneCount / cols);
+  const gapX = Math.floor(canvas.width / (cols + 1));
+  const gapY = Math.floor((canvas.height - 40) / (rows + 1));
+  for (let i = 0; i < stoneCount; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    stones.push({ x: gapX * (col + 1), y: 40 + gapY * (row + 1), counted: false });
+  }
+  updateStatus();
+  draw();
+}
+
+function updateStatus() {
+  document.getElementById('status').textContent = 'Count: ' + count + ' / ' + stoneCount;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stones.forEach(function (s, i) {
+    ctx.beginPath();
+    ctx.ellipse(s.x, s.y, 22, 16, 0, 0, Math.PI * 2);
+    ctx.fillStyle = s.counted ? '#66bb6a' : '#bdbdbd';
+    ctx.fill();
+    ctx.strokeStyle = '#888';
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(s.counted ? (i + 1) : '?', s.x, s.y);
+  });
+  ctx.textBaseline = 'alphabetic';
+}
+
+canvas.addEventListener('click', function (e) {
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  stones.forEach(function (s) {
+    if (!s.counted && Math.hypot(x - s.x, y - s.y) < 28) {
+      s.counted = true;
+      count++;
+    }
+  });
+  updateStatus();
+  draw();
+});
+
+SimLib.slider('Stones', 4, 30, 1, 12, function (v) {
+  stoneCount = v;
+  buildStones();
+});
+SimLib.makeButton('Reset', function () { buildStones(); });
+
+const met = SimLib.metrics();
+
+canvas.addEventListener('click', function () {
+  met.update({ counted: count, remaining: stoneCount - count });
+});
+
+buildStones();
+met.update({ counted: 0, remaining: stoneCount });
+</script>
+</body>
+</html>

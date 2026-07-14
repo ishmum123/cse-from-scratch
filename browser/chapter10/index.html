@@ -5,31 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Trees Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Trees Exist</h1>
-<p>Insert values into a binary search tree and watch the structure grow.</p><div class="controls"><input id="val" type="number" placeholder="Value"><button id="insert">Insert</button><button id="reset">Reset</button></div><canvas id="c" width="700" height="300"></canvas><div id="status">Insert values to build a BST.</div>
+<p>Insert values into a BST. Order of insertion affects height — then try sorted input.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Insert values to build a BST.</div>
+<canvas id="c" width="700" height="300"></canvas>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
-
-class Node { constructor(v) { this.v = v; this.l = null; this.r = null; this.x = 0; this.y = 0; } }
-let root = null;
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-function insert(v) { if (!root) { root = new Node(v); return; } let n = root; while (true) { if (v < n.v) { if (!n.l) { n.l = new Node(v); return; } n = n.l; } else { if (!n.r) { n.r = new Node(v); return; } n = n.r; } } }
-function layout(n, x, y, gap) { if (!n) return; n.x = x; n.y = y; layout(n.l, x - gap, y + 50, gap / 2); layout(n.r, x + gap, y + 50, gap / 2); }
-function drawNode(n) { if (!n) return; if (n.l) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.l.x, n.l.y); ctx.stroke(); drawNode(n.l); } if (n.r) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.r.x, n.r.y); ctx.stroke(); drawNode(n.r); } ctx.beginPath(); ctx.arc(n.x, n.y, 18, 0, Math.PI*2); ctx.fillStyle = '#e3f2fd'; ctx.fill(); ctx.stroke(); ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(n.v, n.x, n.y + 5); }
-function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); layout(root, canvas.width/2, 40, 160); drawNode(root); }
-document.getElementById('insert').onclick = () => { const v = parseInt(document.getElementById('val').value); if (!isNaN(v)) insert(v); document.getElementById('status').textContent = `Inserted ${v}. Tree height grows with order of insertion.`; draw(); };
-document.getElementById('reset').onclick = () => { root = null; document.getElementById('status').textContent = 'Tree cleared.'; draw(); };
-[30, 15, 45, 7, 22, 38, 60].forEach(insert);
-draw();
+const strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{ label: 'tree height', color: '#7b1fa2' }], 30);
 
+class Node {
+  constructor(v) { this.v = v; this.l = null; this.r = null; this.x = 0; this.y = 0; }
+}
+let root = null;
+let insertCount = 0;
+
+function height(n) { if (!n) return 0; return 1 + Math.max(height(n.l), height(n.r)); }
+
+function insert(v) {
+  if (!root) { root = new Node(v); insertCount++; return; }
+  let n = root;
+  while (true) {
+    if (v < n.v) { if (!n.l) { n.l = new Node(v); break; } n = n.l; }
+    else { if (!n.r) { n.r = new Node(v); break; } n = n.r; }
+  }
+  insertCount++;
+}
+
+function layout(n, x, y, gap) {
+  if (!n) return;
+  n.x = x; n.y = y;
+  layout(n.l, x - gap, y + 48, Math.max(gap / 2, 20));
+  layout(n.r, x + gap, y + 48, Math.max(gap / 2, 20));
+}
+
+function drawNode(n, highlight) {
+  if (!n) return;
+  if (n.l) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.l.x, n.l.y); ctx.strokeStyle = '#ccc'; ctx.stroke(); drawNode(n.l, highlight); }
+  if (n.r) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.r.x, n.r.y); ctx.strokeStyle = '#ccc'; ctx.stroke(); drawNode(n.r, highlight); }
+  ctx.beginPath();
+  ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
+  ctx.fillStyle = n.v === highlight ? '#fff59d' : '#e3f2fd';
+  ctx.fill(); ctx.strokeStyle = '#90caf9'; ctx.stroke();
+  ctx.fillStyle = '#333'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(n.v, n.x, n.y);
+  ctx.textBaseline = 'alphabetic';
+}
+
+function draw(highlight) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  layout(root, canvas.width / 2, 30, 160);
+  drawNode(root, highlight);
+}
+
+const valInput = SimLib.numberInput('Value', 1, 99, 30, function () {});
+
+SimLib.makeButton('Insert', function () {
+  const v = Number(valInput.value);
+  if (!isNaN(v)) {
+    insert(v);
+    const h = height(root);
+    strip.push(0, h);
+    document.getElementById('status').textContent = 'Inserted ' + v + '. Height: ' + h + ', nodes: ' + insertCount + '.';
+    met.update({ nodes: insertCount, height: h, 'ideal height': Math.ceil(Math.log2(insertCount + 1)) });
+    draw(v);
+  }
+});
+
+SimLib.makeButton('Insert sorted (×5)', function () {
+  const start = insertCount * 5 + 1;
+  for (let i = 0; i < 5; i++) insert(start + i);
+  const h = height(root);
+  strip.push(0, h);
+  document.getElementById('status').textContent = 'Inserted sorted run. Height now ' + h + ' (worst case!).';
+  met.update({ nodes: insertCount, height: h, 'ideal height': Math.ceil(Math.log2(insertCount + 1)) });
+  draw();
+});
+
+SimLib.makeButton('Reset', function () {
+  root = null; insertCount = 0;
+  strip.reset();
+  document.getElementById('status').textContent = 'Tree cleared.';
+  met.update({ nodes: 0, height: 0, 'ideal height': 0 });
+  draw();
+});
+
+const met = SimLib.metrics();
+met.update({ nodes: 0, height: 0, 'ideal height': 0 });
+[30, 15, 45, 7, 22].forEach(function (v) {
+  insert(v);
+  strip.push(0, height(root));
+});
+met.update({ nodes: insertCount, height: height(root), 'ideal height': Math.ceil(Math.log2(insertCount + 1)) });
+draw();
 </script>
 </body>
 </html>

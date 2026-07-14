@@ -5,38 +5,176 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Recursion Exists</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Recursion Exists</h1>
-<p>Draw a recursive tree by repeatedly splitting branches.</p><div class="controls"><button id="draw">Draw tree</button><input id="depth" type="range" min="1" max="8" value="5"></div><canvas id="c" width="600" height="300"></canvas><div id="status">Each branch calls itself with a smaller problem.</div>
+<p>Iterative vs recursive factorial. Watch the call stack grow and unwind.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Run to animate both.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Iterative', 'Recursive (call stack)', 320, 240);
 
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function branch(x, y, len, angle, depth) {
-  if (depth === 0) return;
-  const x2 = x + len * Math.cos(angle);
-  const y2 = y + len * Math.sin(angle);
-  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke();
-  branch(x2, y2, len * 0.7, angle - 0.4, depth - 1);
-  branch(x2, y2, len * 0.7, angle + 0.4, depth - 1);
-}
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const d = parseInt(document.getElementById('depth').value);
-  branch(canvas.width / 2, canvas.height - 20, 60, -Math.PI / 2, d);
-  document.getElementById('status').textContent = `Recursion depth: ${d}`;
-}
-document.getElementById('draw').onclick = draw;
-document.getElementById('depth').oninput = draw;
-draw();
+let N = 6;
+let step = 0;
+let rafId = null, lastTick = 0;
 
+// Iterative steps: [acc, current_i]
+function iterSteps(n) {
+  const steps = [];
+  let acc = 1;
+  steps.push({ acc: acc, i: 1, done: false });
+  for (let i = 2; i <= n; i++) {
+    acc *= i;
+    steps.push({ acc: acc, i: i, done: i === n });
+  }
+  steps.push({ acc: acc, i: n, done: true });
+  return steps;
+}
+
+// Recursive steps: descend and ascend
+function recSteps(n) {
+  const steps = [];
+  function f(k) {
+    steps.push({ stack: steps.map(function () { return 0; }).concat([k]), calling: k, phase: 'down', depth: k });
+    if (k <= 1) { steps.push({ depth: k, phase: 'base', val: 1 }); return 1; }
+    const r = f(k - 1);
+    const v = k * r;
+    steps.push({ depth: k, phase: 'up', val: v });
+    return v;
+  }
+  // build stack trace manually
+  const callStack = [];
+  function trace(k) {
+    callStack.push(k);
+    steps.push({ callStack: callStack.slice(), phase: 'call', depth: k });
+    if (k <= 1) {
+      steps.push({ callStack: callStack.slice(), phase: 'base', val: 1 });
+      callStack.pop();
+      return 1;
+    }
+    const r = trace(k - 1);
+    const v = k * r;
+    steps.push({ callStack: callStack.slice(), phase: 'return', val: v, k: k });
+    callStack.pop();
+    return v;
+  }
+  trace(n);
+  return steps;
+}
+
+let iSteps = [], rSteps = [], iStep = 0, rStep = 0;
+
+function buildSteps() {
+  iSteps = iterSteps(N);
+  rSteps = recSteps(N);
+  iStep = 0; rStep = 0;
+}
+
+function drawIterative(s) {
+  const ctx = ctxA, cv = cvA;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#555'; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('factorial(' + N + ') iteratively', 10, 20);
+
+  if (!s) return;
+  const boxW = 48, boxH = 28, startX = 10, boxY = 38;
+  for (let i = 1; i <= N; i++) {
+    const x = startX + (i - 1) * (boxW + 4);
+    const isCur = i === s.i && !s.done;
+    ctx.fillStyle = i < s.i ? '#c8e6c9' : (isCur ? '#fff176' : '#f5f5f5');
+    ctx.fillRect(x, boxY, boxW, boxH);
+    ctx.strokeStyle = isCur ? '#f57f17' : '#ccc'; ctx.strokeRect(x, boxY, boxW, boxH);
+    ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('×' + i, x + boxW / 2, boxY + 19);
+  }
+
+  ctx.fillStyle = '#333'; ctx.font = '13px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('acc = ' + s.acc, 10, boxY + boxH + 26);
+  ctx.fillText('i   = ' + s.i, 10, boxY + boxH + 44);
+  if (s.done) {
+    ctx.fillStyle = '#388e3c'; ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(N + '! = ' + s.acc, 10, boxY + boxH + 70);
+  }
+}
+
+function drawRecursive(s) {
+  const ctx = ctxB, cv = cvB;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#555'; ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('factorial(' + N + ') recursively', 10, 20);
+
+  if (!s || !s.callStack) return;
+  const frameH = 32, stackX = 20, stackW = cv.width - 40;
+  const maxDepth = N;
+
+  s.callStack.forEach(function (k, idx) {
+    const y = 40 + idx * (frameH + 2);
+    const phase = (idx === s.callStack.length - 1) ? s.phase : 'call';
+    ctx.fillStyle = phase === 'base' ? '#fff176' : (phase === 'return' ? '#c8e6c9' : '#e3f2fd');
+    ctx.fillRect(stackX, y, stackW, frameH);
+    ctx.strokeStyle = (idx === s.callStack.length - 1) ? '#f57f17' : '#90caf9';
+    ctx.lineWidth = (idx === s.callStack.length - 1) ? 2 : 1;
+    ctx.strokeRect(stackX, y, stackW, frameH);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#333'; ctx.font = '12px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('factorial(' + k + ')', stackX + 8, y + 20);
+    if (phase === 'return' && s.val) {
+      ctx.fillStyle = '#388e3c'; ctx.textAlign = 'right';
+      ctx.fillText('→ ' + s.val, stackX + stackW - 8, y + 20);
+    }
+    if (phase === 'base') {
+      ctx.fillStyle = '#f57f17'; ctx.textAlign = 'right';
+      ctx.fillText('base: 1', stackX + stackW - 8, y + 20);
+    }
+  });
+
+  if (s.phase === 'return' && s.callStack.length === 1) {
+    const y = 40 + s.callStack.length * (frameH + 2) + 10;
+    ctx.fillStyle = '#388e3c'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(N + '! = ' + s.val, cv.width / 2, y + 20);
+  }
+}
+
+function reset() {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  buildSteps();
+  drawIterative(null); drawRecursive(null);
+  met.update({ N: N, 'iter steps': iSteps.length, 'rec frames': N, result: '?' });
+  document.getElementById('status').textContent = 'Press Run.';
+}
+
+function tick(ts) {
+  if (ts - lastTick < 350) { rafId = requestAnimationFrame(tick); return; }
+  lastTick = ts;
+  let any = false;
+  if (iStep < iSteps.length) { drawIterative(iSteps[iStep]); iStep++; any = true; }
+  if (rStep < rSteps.length) { drawRecursive(rSteps[rStep]); rStep++; any = true; }
+  const lastI = iSteps[Math.min(iStep, iSteps.length - 1)];
+  met.update({ N: N, 'iter step': iStep, 'rec stack depth': rSteps[Math.min(rStep, rSteps.length - 1)] ? (rSteps[Math.min(rStep, rSteps.length - 1)].callStack || []).length : 0, result: lastI && lastI.done ? lastI.acc : '…' });
+  if (any && (iStep < iSteps.length || rStep < rSteps.length)) {
+    rafId = requestAnimationFrame(tick);
+  } else {
+    const r = iSteps[iSteps.length - 1].acc;
+    document.getElementById('status').textContent = N + '! = ' + r + '. Both approaches agree. Recursion uses a call stack.';
+    rafId = null;
+  }
+}
+
+SimLib.slider('N', 2, 8, 1, 6, function (v) { N = v; reset(); });
+SimLib.makeButton('Run', function () { reset(); lastTick = 0; rafId = requestAnimationFrame(tick); });
+SimLib.makeButton('Reset', reset);
+
+const met = SimLib.metrics();
+reset();
 </script>
 </body>
 </html>

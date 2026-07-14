@@ -1,1 +1,135 @@
-../../../../browser/chapter31/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why B-Trees Won</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why B-Trees Won</h1>
+<p>Binary BST needs one node per disk read. B-tree packs many keys per node (one disk block per read). Same keys, far fewer disk reads.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Insert keys and compare disk reads for search.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Binary BST (1 key/node)', 'B-Tree (fan-out=4)', 320, 220);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'BST reads', color:'#ef5350'},{label:'B-tree reads', color:'#43a047'}], 30);
+
+var FANOUT = 4; // keys per B-tree node (simulated)
+var keys = [];
+var insertCount = 0;
+
+function reset() {
+  keys = []; insertCount = 0;
+  strip.reset();
+  met.update({keys:0,'BST depth':0,'B-tree depth':0,'BST reads':0,'B-tree reads':0});
+  document.getElementById('status').textContent = 'Insert keys to build both trees.';
+  draw();
+}
+
+// BST depth for n nodes: avg log2(n)
+function bstDepth(n) { return n<1?0:Math.ceil(Math.log2(n+1)); }
+// B-tree depth for n keys with fanout F: ceil(log_F(n))
+function btreeDepth(n) { return n<1?0:Math.ceil(Math.log(n+1)/Math.log(FANOUT)); }
+
+function drawBST(ctx, cv) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, n=keys.length;
+  if (!n) { ctx.fillStyle='#aaa'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('(empty)',W/2,cv.height/2); return; }
+  // draw nodes level by level
+  var depth=bstDepth(n);
+  var nodeR=14, vGap=36;
+  function drawNode(val,x,y) {
+    ctx.fillStyle='#ef9a9a'; ctx.beginPath(); ctx.arc(x,y,nodeR,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#c62828'; ctx.stroke();
+    ctx.fillStyle='#333'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(val,x,y+4);
+  }
+  // simple sorted insertion visualization: inorder layout
+  var sorted=keys.slice().sort(function(a,b){return a-b;});
+  var levelW=W-20;
+  // place by BST structure
+  function placeNode(arr, lo, hi, x, y, spread) {
+    if (lo>hi) return;
+    var mid=Math.floor((lo+hi)/2);
+    drawNode(arr[mid],x,y);
+    if (lo<mid) { ctx.beginPath(); ctx.moveTo(x,y+nodeR); ctx.lineTo(x-spread/2,y+vGap-nodeR); ctx.strokeStyle='#ccc'; ctx.stroke(); placeNode(arr,lo,mid-1,x-spread/2,y+vGap,spread/2); }
+    if (mid<hi) { ctx.beginPath(); ctx.moveTo(x,y+nodeR); ctx.lineTo(x+spread/2,y+vGap-nodeR); ctx.strokeStyle='#ccc'; ctx.stroke(); placeNode(arr,mid+1,hi,x+spread/2,y+vGap,spread/2); }
+  }
+  placeNode(sorted,0,sorted.length-1,W/2,20,W*0.4);
+  ctx.fillStyle='#555'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('depth: '+depth, W/2, cv.height-6);
+}
+
+function drawBtree(ctx, cv) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, n=keys.length;
+  if (!n) { ctx.fillStyle='#aaa'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('(empty)',W/2,cv.height/2); return; }
+  var depth=btreeDepth(n);
+  // visualise as filled nodes row by row
+  var sorted=keys.slice().sort(function(a,b){return a-b;});
+  var nodeW=FANOUT*18+8, nodeH=22, vGap=38;
+  // split into chunks of FANOUT
+  var nodes=[];
+  for (var i=0;i<sorted.length;i+=FANOUT) nodes.push(sorted.slice(i,i+FANOUT));
+  // draw bottom level nodes
+  var total=nodes.length;
+  var rowW=total*(nodeW+6)-6;
+  var startX=(W-rowW)/2;
+  nodes.forEach(function(node,i){
+    var x=startX+i*(nodeW+6), y=20+(depth-1)*vGap;
+    ctx.fillStyle='#a5d6a7'; ctx.fillRect(x,y,nodeW,nodeH);
+    ctx.strokeStyle='#388e3c'; ctx.strokeRect(x,y,nodeW,nodeH);
+    ctx.fillStyle='#333'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(node.join('|'), x+nodeW/2, y+nodeH/2+3);
+  });
+  // draw internal root
+  if (depth>1) {
+    ctx.fillStyle='#ffe082'; ctx.fillRect(W/2-nodeW/2, 20, nodeW, nodeH);
+    ctx.strokeStyle='#f9a825'; ctx.strokeRect(W/2-nodeW/2, 20, nodeW, nodeH);
+    ctx.fillStyle='#333'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('root ('+n+' keys)', W/2, 20+nodeH/2+3);
+  }
+  ctx.fillStyle='#555'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('depth: '+depth+' (fanout='+FANOUT+')', W/2, cv.height-6);
+}
+
+function draw() {
+  drawBST(ctxA, cvA);
+  drawBtree(ctxB, cvB);
+  var n=keys.length;
+  var bd=bstDepth(n), btd=btreeDepth(n);
+  strip.push(0, bd);
+  strip.push(1, btd);
+  met.update({keys:n,'BST depth':bd,'B-tree depth':btd,'BST reads':bd,'B-tree reads':btd});
+  document.getElementById('status').textContent =
+    keys.length+' keys — BST depth: '+bd+' reads. B-tree depth: '+btd+' reads. B-tree saves '+(bd-btd)+' disk reads.';
+}
+
+SimLib.slider('Fan-out', 2, 8, 1, 4, function(v){ FANOUT=v; draw(); });
+SimLib.makeButton('Insert 1', function(){
+  keys.push(Math.floor(Math.random()*99)+1); insertCount++;
+  draw();
+});
+SimLib.makeButton('Insert 5', function(){
+  for(var i=0;i<5;i++) keys.push(Math.floor(Math.random()*99)+1);
+  insertCount+=5; draw();
+});
+SimLib.makeButton('Reset', reset);
+var met = SimLib.metrics();
+reset();
+</script>
+</body>
+</html>

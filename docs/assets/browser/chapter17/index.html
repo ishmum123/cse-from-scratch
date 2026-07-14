@@ -1,1 +1,149 @@
-../../../../browser/chapter17/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Graphs Matter</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Graphs Matter</h1>
+<p>BFS explores nodes layer by layer. Click a start node then Run BFS.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Click a node to select start, then press BFS.</div>
+<canvas id="c" width="700" height="320"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let nodeCount = 8;
+let nodes = [], edges = [], visited = [], queue = [], order = [], current = -1;
+let rafId = null, lastTick = 0, startNode = 0, bfsIdx = 0;
+let bfsQueue = [], bfsVisited = [], bfsOrder = [];
+
+function buildGraph() {
+  nodes = [];
+  edges = [];
+  const cx = canvas.width / 2, cy = canvas.height / 2, r = 120;
+  for (let i = 0; i < nodeCount; i++) {
+    const angle = (i / nodeCount) * Math.PI * 2 - Math.PI / 2;
+    nodes.push({ x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle), id: i });
+  }
+  // Connect in ring + some chords
+  for (let i = 0; i < nodeCount; i++) {
+    edges.push([i, (i + 1) % nodeCount]);
+  }
+  for (let i = 0; i < Math.floor(nodeCount / 2); i++) {
+    const j = (i + Math.floor(nodeCount / 3)) % nodeCount;
+    if (!edges.some(function (e) { return (e[0] === i && e[1] === j) || (e[0] === j && e[1] === i); })) {
+      edges.push([i, j]);
+    }
+  }
+  bfsVisited = new Array(nodeCount).fill(false);
+  bfsQueue = []; bfsOrder = []; current = -1;
+  startNode = 0;
+  draw();
+  met.update({ nodes: nodeCount, edges: edges.length, visited: 0, 'queue size': 0 });
+  document.getElementById('status').textContent = 'Graph built. Click a node to select start, then BFS.';
+}
+
+function adjList() {
+  const adj = Array.from({ length: nodeCount }, function () { return []; });
+  edges.forEach(function (e) { adj[e[0]].push(e[1]); adj[e[1]].push(e[0]); });
+  return adj;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // edges
+  edges.forEach(function (e) {
+    ctx.beginPath();
+    ctx.moveTo(nodes[e[0]].x, nodes[e[0]].y);
+    ctx.lineTo(nodes[e[1]].x, nodes[e[1]].y);
+    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1.5; ctx.stroke();
+  });
+  // nodes
+  nodes.forEach(function (n, i) {
+    const isStart = i === startNode;
+    const isCur = i === current;
+    const inQueue = bfsQueue.indexOf(i) >= 0;
+    const wasVisited = bfsVisited[i];
+    const orderIdx = bfsOrder.indexOf(i);
+    ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI * 2);
+    ctx.fillStyle = isCur ? '#fff176' : (wasVisited ? '#c8e6c9' : (inQueue ? '#bbdefb' : (isStart ? '#ffe0b2' : '#f5f5f5')));
+    ctx.fill(); ctx.strokeStyle = isStart ? '#f57f17' : '#90caf9'; ctx.lineWidth = isStart ? 2.5 : 1.5; ctx.stroke();
+    ctx.fillStyle = '#333'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(i, n.x, n.y);
+    if (orderIdx >= 0) {
+      ctx.fillStyle = '#388e3c'; ctx.font = '10px sans-serif';
+      ctx.fillText('#' + (orderIdx + 1), n.x + 16, n.y - 16);
+    }
+    ctx.textBaseline = 'alphabetic';
+  });
+  // legend
+  ctx.font = '11px sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#888';
+  ctx.fillText('yellow=current  green=visited  blue=queued  orange=start', 10, canvas.height - 8);
+}
+
+canvas.addEventListener('click', function (e) {
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  for (let i = 0; i < nodes.length; i++) {
+    if (Math.hypot(x - nodes[i].x, y - nodes[i].y) < 22) {
+      startNode = i;
+      bfsVisited = new Array(nodeCount).fill(false);
+      bfsQueue = []; bfsOrder = []; current = -1;
+      document.getElementById('status').textContent = 'Start node: ' + i + '. Press BFS.';
+      draw();
+      break;
+    }
+  }
+});
+
+function tick(ts) {
+  if (ts - lastTick < 400) { rafId = requestAnimationFrame(tick); return; }
+  lastTick = ts;
+  if (bfsQueue.length === 0) {
+    document.getElementById('status').textContent = 'BFS complete. Visited order: ' + bfsOrder.join(' → ');
+    current = -1; draw();
+    rafId = null; return;
+  }
+  const node = bfsQueue.shift();
+  current = node;
+  bfsOrder.push(node);
+  const adj = adjList();
+  adj[node].forEach(function (nb) {
+    if (!bfsVisited[nb]) { bfsVisited[nb] = true; bfsQueue.push(nb); }
+  });
+  met.update({ nodes: nodeCount, edges: edges.length, visited: bfsOrder.length, 'queue size': bfsQueue.length, current: node });
+  draw();
+  rafId = requestAnimationFrame(tick);
+}
+
+SimLib.slider('Nodes', 4, 12, 1, 8, function (v) { nodeCount = v; buildGraph(); });
+SimLib.makeButton('BFS', function () {
+  if (rafId) cancelAnimationFrame(rafId);
+  bfsVisited = new Array(nodeCount).fill(false);
+  bfsVisited[startNode] = true;
+  bfsQueue = [startNode]; bfsOrder = []; current = -1;
+  lastTick = 0;
+  rafId = requestAnimationFrame(tick);
+  document.getElementById('status').textContent = 'BFS from node ' + startNode + '…';
+});
+SimLib.makeButton('Reset', function () {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  buildGraph();
+});
+
+const met = SimLib.metrics();
+buildGraph();
+</script>
+</body>
+</html>

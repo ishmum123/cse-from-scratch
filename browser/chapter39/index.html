@@ -5,41 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Load Balancers Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Load Balancers Exist</h1>
-<p>Distribute requests across backends.</p><div class="controls"><button id="send">Send requests</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Load balancers spread traffic and hide backend failures.</div>
+<p>Single server: one failure drops all traffic. Load balancer across N servers: traffic reroutes around failures, queue depth stays low on each node.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Running — kill a server to watch traffic shift.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Single server', 'Load balanced (3 servers)', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'single queue', color:'#ef5350'},{label:'LB max queue', color:'#43a047'}], 80);
 
-const backends = [{id:1,load:0,alive:true},{id:2,load:0,alive:true},{id:3,load:0,alive:true}];
-let current = 0;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#e3f2fd'; ctx.fillRect(250, 30, 100, 40); ctx.strokeRect(250, 30, 100, 40); ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('LB', 300, 55);
-  backends.forEach((b, i) => {
-    ctx.fillStyle = b.alive ? '#c8e6c9' : '#ffcdd2';
-    ctx.fillRect(100 + i * 160, 120, 120, 50); ctx.strokeRect(100 + i * 160, 120, 120, 50);
-    ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`Backend ${b.id}`, 160 + i * 160, 145); ctx.fillText(`load ${b.load}`, 160 + i * 160, 162);
-    ctx.beginPath(); ctx.moveTo(300, 70); ctx.lineTo(160 + i * 160, 120); ctx.stroke();
-  });
+var arrivalRate = 5;
+var serviceRate = 3;
+var numServers = 3;
+var tickN=0, lastTs=0;
+var singleAlive=true, singleQueue=0;
+var lbServers, rrIdx;
+
+function reset() {
+  tickN=0; singleAlive=true; singleQueue=0;
+  lbServers=[]; rrIdx=0;
+  for(var i=0;i<numServers;i++) lbServers.push({id:i+1,alive:true,queue:0});
+  strip.reset();
+  met.update({tick:0,'single queue':0,'LB max queue':0,'single alive':1,'LB alive':numServers});
+  document.getElementById('status').textContent = 'Running. Kill a server to see rerouting.';
 }
-document.getElementById('send').onclick = () => {
-  const alive = backends.filter(b => b.alive);
-  const b = alive[current % alive.length];
-  b.load++;
-  current++;
-  draw();
-};
-draw();
 
+function drawSingle(ctx, cv) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width;
+  // server box
+  ctx.fillStyle=singleAlive?'#c8e6c9':'#ffcdd2';
+  ctx.fillRect(W/2-50,30,100,50);
+  ctx.strokeStyle='#bbb'; ctx.strokeRect(W/2-50,30,100,50);
+  ctx.fillStyle='#333'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Server', W/2, 52);
+  ctx.font='11px sans-serif';
+  ctx.fillText(singleAlive?'alive':'DEAD', W/2, 68);
+  // queue bar
+  var cap=20, bw=W-40,bh=20,bx=20,by=100;
+  ctx.fillStyle='#eee'; ctx.fillRect(bx,by,bw,bh);
+  ctx.fillStyle=singleAlive?'#90caf9':'#ffcdd2';
+  ctx.fillRect(bx,by,bw*Math.min(1,singleQueue/cap),bh);
+  ctx.strokeStyle='#bbb'; ctx.strokeRect(bx,by,bw,bh);
+  ctx.fillStyle='#333'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Queue: '+singleQueue+(singleAlive?'':' (all dropped!)'), W/2, by+bh+16);
+  ctx.fillStyle='#555'; ctx.font='10px sans-serif';
+  ctx.fillText('arrival='+arrivalRate+' service='+serviceRate, W/2, cv.height-6);
+}
+
+function drawLB(ctx, cv) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width;
+  // LB box
+  ctx.fillStyle='#e3f2fd'; ctx.fillRect(W/2-35,8,70,26);
+  ctx.strokeStyle='#90a4ae'; ctx.strokeRect(W/2-35,8,70,26);
+  ctx.fillStyle='#333'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('LB', W/2, 25);
+  // servers
+  var alive=lbServers.filter(function(s){return s.alive;}).length;
+  lbServers.forEach(function(s,i){
+    var n=lbServers.length;
+    var x=W*(i+1)/(n+1);
+    // line from LB
+    ctx.strokeStyle=s.alive?'#90a4ae':'#ffcdd2'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(W/2,34); ctx.lineTo(x,70); ctx.stroke(); ctx.lineWidth=1;
+    // server
+    ctx.fillStyle=s.alive?'#c8e6c9':'#ffcdd2';
+    ctx.fillRect(x-28,70,56,36); ctx.strokeStyle='#bbb'; ctx.strokeRect(x-28,70,56,36);
+    ctx.fillStyle='#333'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('S'+s.id,x,84);
+    ctx.fillText(s.alive?'q='+s.queue:'dead',x,96);
+  });
+  var maxQ=Math.max.apply(null,lbServers.map(function(s){return s.alive?s.queue:0;}));
+  ctx.fillStyle='#555'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('alive: '+alive+'/'+numServers+' | max queue: '+maxQ, W/2, cv.height-6);
+}
+
+function frame(ts) {
+  if(ts-lastTs<350){state.rafId=requestAnimationFrame(frame);return;}
+  lastTs=ts; tickN++;
+
+  var arrivals=Math.round(arrivalRate*(0.7+Math.random()*0.6));
+
+  // Single server
+  if (singleAlive) {
+    singleQueue=Math.max(0,singleQueue+arrivals-serviceRate);
+  } else {
+    singleQueue+=arrivals; // keep piling up
+  }
+
+  // LB: round-robin to alive servers
+  var aliveServers=lbServers.filter(function(s){return s.alive;});
+  var perServer=aliveServers.length>0?Math.ceil(arrivals/aliveServers.length):0;
+  lbServers.forEach(function(s){
+    if(s.alive) s.queue=Math.max(0,s.queue+perServer-serviceRate);
+  });
+
+  var maxQ=Math.max.apply(null,lbServers.map(function(s){return s.alive?s.queue:0;}));
+  strip.push(0,singleQueue);
+  strip.push(1,maxQ);
+  drawSingle(ctxA,cvA);
+  drawLB(ctxB,cvB);
+  var aliveN=lbServers.filter(function(s){return s.alive;}).length;
+  met.update({tick:tickN,'single queue':singleQueue,'LB max queue':maxQ,
+    'single alive':singleAlive?1:0,'LB alive':aliveN});
+  document.getElementById('status').textContent=
+    'Single queue: '+singleQueue+(singleAlive?'':' (server down!)') +
+    ' | LB max queue: '+maxQ;
+
+  if(!state.paused) state.rafId=requestAnimationFrame(frame);
+}
+
+SimLib.slider('Arrival rate', 2, 10, 1, 5, function(v){ arrivalRate=v; });
+SimLib.slider('Service rate', 1, 8, 1, 3, function(v){ serviceRate=v; });
+SimLib.makeButton('Kill single server', function(){
+  singleAlive=false;
+  document.getElementById('status').textContent='Single server killed! All traffic lost.';
+});
+SimLib.makeButton('Kill LB server', function(){
+  var alive=lbServers.filter(function(s){return s.alive;});
+  if(alive.length>1) {
+    alive[0].alive=false;
+    document.getElementById('status').textContent='LB server S'+alive[0].id+' killed. Traffic rerouted to '+( alive.length-1)+' remaining.';
+  } else {
+    document.getElementById('status').textContent='Only 1 LB server left!';
+  }
+});
+var state=SimLib.pauseResumeReset(frame,reset);
+var met=SimLib.metrics();
+reset();
+state.rafId=requestAnimationFrame(frame);
 </script>
 </body>
 </html>

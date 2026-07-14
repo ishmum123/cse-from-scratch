@@ -5,38 +5,123 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Transactions Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Transactions Exist</h1>
-<p>Transfer balance between accounts. A crash mid-update needs rollback.</p><div class="controls"><button id="commit">Commit transfer</button><button id="crash">Simulate crash</button><button id="reset">Reset</button></div><canvas id="c" width="500" height="220"></canvas><div id="status">Transactions commit atomically or roll back.</div>
+<p>No transaction: crash mid-transfer leaves balances inconsistent. Transaction: atomically commit or rollback — either both changes happen or neither does.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Transfer funds and simulate a crash.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'No transaction (dangerous)', 'With transaction (safe)', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
 
-let a = 100, b = 50;
-let tempA, tempB;
-let state = 'ready';
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = state === 'crash' ? '#ffcdd2' : '#e3f2fd';
-  ctx.fillRect(60, 50, 140, 100); ctx.strokeRect(60, 50, 140, 100);
-  ctx.fillStyle = state === 'crash' ? '#ffcdd2' : '#e3f2fd';
-  ctx.fillRect(300, 50, 140, 100); ctx.strokeRect(300, 50, 140, 100);
-  ctx.fillStyle = '#333'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Account A', 130, 85); ctx.fillText(state === 'crash' ? a : a, 130, 115);
-  ctx.fillText('Account B', 370, 85); ctx.fillText(state === 'crash' ? b : b, 370, 115);
-  ctx.font = '12px sans-serif'; ctx.fillText(state === 'crash' ? 'rolled back' : 'committed', 250, 180);
+var initA = 100, initB = 50, amount = 30;
+var noTxA=initA, noTxB=initB, noTxStep=0;
+var txA=initA, txB=initB, txState='idle';
+var crashStep = 0; // 0=before debit, 1=after debit before credit
+
+function reset() {
+  noTxA=initA; noTxB=initB; noTxStep=0;
+  txA=initA; txB=initB; txState='idle';
+  crashStep=0;
+  draw();
+  met.update({'no-tx A':noTxA,'no-tx B':noTxB,'tx A':txA,'tx B':txB,total:noTxA+noTxB});
+  document.getElementById('status').textContent = 'Balances: A='+initA+', B='+initB+'. Transfer: '+amount;
 }
-document.getElementById('commit').onclick = () => { a -= 20; b += 20; state = 'committed'; draw(); };
-document.getElementById('crash').onclick = () => { state = 'crash'; draw(); };
-document.getElementById('reset').onclick = () => { a = 100; b = 50; state = 'ready'; draw(); };
-draw();
 
+function drawAccount(ctx, x, y, w, h, name, bal, highlight) {
+  ctx.fillStyle=highlight||'#e3f2fd'; ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle='#bbb'; ctx.strokeRect(x,y,w,h);
+  ctx.fillStyle='#333'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(name, x+w/2, y+22);
+  ctx.font='20px sans-serif';
+  ctx.fillText('$'+bal, x+w/2, y+52);
+}
+
+function drawSide(ctx, cv, a, b, stateLabel, aColor, bColor) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width;
+  drawAccount(ctx,20,30,110,70,'Account A',a,aColor);
+  drawAccount(ctx,W-130,30,110,70,'Account B',b,bColor);
+  // arrow
+  ctx.strokeStyle='#888'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(135,65); ctx.lineTo(W-135,65); ctx.stroke();
+  ctx.fillStyle='#888'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('transfer $'+amount, W/2, 56);
+  // state label
+  ctx.fillStyle='#555'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(stateLabel, W/2, 125);
+  // total
+  var total=a+b;
+  var ok=total===(initA+initB);
+  ctx.fillStyle=ok?'#388e3c':'#c62828'; ctx.font='bold 11px sans-serif';
+  ctx.fillText('Total: $'+total+(ok?' (consistent)':' !! INCONSISTENT !!'), W/2, 148);
+  ctx.lineWidth=1;
+}
+
+function draw() {
+  // No-tx side
+  var naColor='#e3f2fd', nbColor='#e3f2fd';
+  var noTxLabel='';
+  if (noTxStep===1) { naColor='#ffcdd2'; noTxLabel='Step 1: A debited. Crash?'; }
+  else if (noTxStep===2) { naColor='#c8e6c9'; nbColor='#c8e6c9'; noTxLabel='Step 2: B credited. Done.'; }
+  else if (noTxStep===99) { naColor='#ffcdd2'; noTxLabel='CRASHED after debit — B never credited!'; }
+  drawSide(ctxA, cvA, noTxA, noTxB, noTxLabel||'Ready', naColor, nbColor);
+
+  // Tx side
+  var taColor='#e3f2fd', tbColor='#e3f2fd', txLabel='';
+  if (txState==='begin') { txLabel='BEGIN TRANSACTION'; }
+  else if (txState==='debited') { taColor='#fff9c4'; txLabel='Debited A (uncommitted)'; }
+  else if (txState==='committed') { taColor='#c8e6c9'; tbColor='#c8e6c9'; txLabel='COMMIT — both changes persist.'; }
+  else if (txState==='rolledback') { txLabel='ROLLBACK — crash undone. A restored.'; }
+  drawSide(ctxB, cvB, txA, txB, txLabel||'Ready', taColor, tbColor);
+
+  met.update({'no-tx A':noTxA,'no-tx B':noTxB,'tx A':txA,'tx B':txB,
+    'total no-tx':noTxA+noTxB,'total tx':txA+txB});
+}
+
+SimLib.slider('Transfer $', 10, 50, 10, 30, function(v){ amount=v; draw(); });
+SimLib.makeButton('Step (no-tx)', function(){
+  if (noTxStep===0) { noTxA-=amount; noTxStep=1; }
+  else if (noTxStep===1) { noTxB+=amount; noTxStep=2; }
+  else { noTxA=initA; noTxB=initB; noTxStep=0; }
+  draw();
+  document.getElementById('status').textContent = noTxStep===1?'Debited A. Will you crash now?':noTxStep===2?'Both done. Total consistent.':'Reset.';
+});
+SimLib.makeButton('Crash (no-tx)', function(){
+  if (noTxStep===1) { noTxStep=99; document.getElementById('status').textContent = 'CRASH mid-transfer: A lost $'+amount+', B never received it!'; }
+  else { document.getElementById('status').textContent = 'No in-flight transfer to crash.'; }
+  draw();
+});
+SimLib.makeButton('Begin→Commit (tx)', function(){
+  txA=initA; txB=initB; txState='begin'; draw();
+  setTimeout(function(){ txA-=amount; txState='debited'; draw();
+    setTimeout(function(){ txB+=amount; txState='committed'; draw();
+      document.getElementById('status').textContent='Transaction committed. Both accounts updated atomically.';
+    },700);
+  },400);
+});
+SimLib.makeButton('Begin→Crash→Rollback (tx)', function(){
+  txA=initA; txB=initB; txState='begin'; draw();
+  setTimeout(function(){ txA-=amount; txState='debited'; draw();
+    document.getElementById('status').textContent='Debited A (uncommitted). CRASH!';
+    setTimeout(function(){ txA=initA; txState='rolledback'; draw();
+      document.getElementById('status').textContent='Rollback: A restored. No money lost.';
+    },700);
+  },400);
+});
+SimLib.makeButton('Reset', reset);
+var met = SimLib.metrics();
+reset();
 </script>
 </body>
 </html>

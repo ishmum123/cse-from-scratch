@@ -5,42 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Computers Need Addresses</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Computers Need Addresses</h1>
-<p>Route a packet from source to destination using addresses.</p><div class="controls"><input id="dest" type="number" min="1" max="4" value="4" style="width:80px"><button id="send">Send</button></div><canvas id="c" width="500" height="300"></canvas><div id="status">Addresses let routers decide where to forward packets.</div>
+<p>Broadcast (no address): every machine sees every message. Addressed delivery: router reads destination and forwards only to the right machine.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Send to route a packet.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Broadcast (no address)', 'Routed (with address)', 320, 220);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'broadcast msgs', color:'#ef5350'},{label:'routed msgs', color:'#43a047'}], 60);
 
-const nodes = [{id:1,x:80,y:150},{id:2,x:250,y:80},{id:3,x:250,y:220},{id:4,x:420,y:150}];
-const links = [[1,2],[1,3],[2,4],[3,4]];
-let packet = null;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  links.forEach(([a,b]) => { const u = nodes.find(n=>n.id===a), v = nodes.find(n=>n.id===b); ctx.beginPath(); ctx.moveTo(u.x, u.y); ctx.lineTo(v.x, v.y); ctx.stroke(); });
-  nodes.forEach(n => { ctx.beginPath(); ctx.arc(n.x, n.y, 25, 0, Math.PI*2); ctx.fillStyle = '#e3f2fd'; ctx.fill(); ctx.stroke(); ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(n.id, n.x, n.y+5); ctx.font = '10px sans-serif'; ctx.fillText(`10.0.0.${n.id}`, n.x, n.y+38); });
-  if (packet) { ctx.beginPath(); ctx.arc(packet.x, packet.y, 8, 0, Math.PI*2); ctx.fillStyle = '#ef5350'; ctx.fill(); }
+var numNodes = 4;
+var destNode = 2; // 0-indexed target
+var bcastTotal=0, routeTotal=0;
+var tickN=0, lastTs=0;
+
+function reset() {
+  bcastTotal=0; routeTotal=0; tickN=0;
+  strip.reset();
+  met.update({'broadcast total':0,'routed total':0,'broadcast waste%':0,'routed waste%':0});
+  document.getElementById('status').textContent = 'Press Send to route a packet.';
+  draw([], []);
 }
-async function send() {
-  const dest = parseInt(document.getElementById('dest').value);
-  packet = {...nodes[0]};
-  const path = [1, dest <= 2 ? 2 : 3, dest];
-  for (let i = 0; i < path.length - 1; i++) {
-    const a = nodes.find(n=>n.id===path[i]), b = nodes.find(n=>n.id===path[i+1]);
-    for (let t = 0; t <= 1; t += 0.05) { packet.x = a.x + (b.x-a.x)*t; packet.y = a.y + (b.y-a.y)*t; draw(); await new Promise(r => setTimeout(r, 30)); }
+
+function nodePositions(n, cv, pad) {
+  var W=cv.width, H=cv.height;
+  var positions=[];
+  for(var i=0;i<n;i++){
+    var angle = (i/n)*2*Math.PI - Math.PI/2;
+    positions.push({
+      x: W/2 + Math.cos(angle)*(W/2-pad-20),
+      y: H/2 + Math.sin(angle)*(H/2-pad-20)
+    });
   }
-  document.getElementById('status').textContent = `Packet delivered to 10.0.0.${dest}.`;
+  return positions;
 }
-document.getElementById('send').onclick = send;
-draw();
 
+function drawNet(ctx, cv, nodes, highlightAll, highlightIdx, packetPos, label) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width,H=cv.height;
+  var pos=nodePositions(nodes,cv,20);
+  // draw edges
+  for(var i=0;i<nodes;i++){
+    for(var j=i+1;j<nodes;j++){
+      ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(pos[i].x,pos[i].y); ctx.lineTo(pos[j].x,pos[j].y); ctx.stroke();
+    }
+  }
+  // draw nodes
+  pos.forEach(function(p,i){
+    var isTarget=i===destNode;
+    var isReceiving=highlightAll||(highlightIdx===i);
+    ctx.fillStyle=isReceiving?(isTarget?'#c8e6c9':'#ffcdd2'):'#e3f2fd';
+    ctx.beginPath(); ctx.arc(p.x,p.y,18,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=isTarget?'#388e3c':'#90a4ae'; ctx.lineWidth=isTarget?2:1;
+    ctx.stroke(); ctx.lineWidth=1;
+    ctx.fillStyle='#333'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('N'+(i+1),p.x,p.y+4);
+    ctx.font='9px sans-serif'; ctx.fillStyle='#666';
+    ctx.fillText('10.0.0.'+(i+1),p.x,p.y+30);
+  });
+  // packet
+  if (packetPos) {
+    ctx.fillStyle='#f57f17';
+    ctx.beginPath(); ctx.arc(packetPos.x,packetPos.y,7,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle='#555'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(label, W/2, H-6);
+}
+
+function draw(bcast, route) {
+  drawNet(ctxA,cvA,numNodes,bcast.length>0,bcast[0],-1,'broadcast: all nodes wake up');
+  drawNet(ctxB,cvB,numNodes,false,route.length>0?destNode:-1,-1,'routed: only N'+(destNode+1)+' receives');
+}
+
+function sendPacket() {
+  // broadcast: every node "receives" = numNodes messages wasted
+  var wasted=numNodes-1;
+  bcastTotal+=numNodes;
+  routeTotal+=1;
+  tickN++;
+  strip.push(0,numNodes);
+  strip.push(1,1);
+  var bWaste=Math.round((bcastTotal-tickN)/bcastTotal*100);
+  var rWaste=0;
+  met.update({'broadcast total':bcastTotal,'routed total':routeTotal,
+    'broadcast waste%':bWaste,'routed waste%':rWaste});
+  document.getElementById('status').textContent =
+    'Broadcast: '+numNodes+' nodes receive ('+wasted+' wasted). Routed: 1 node receives.';
+  // animate
+  drawNet(ctxA,cvA,numNodes,true,-1,null,'broadcast: '+numNodes+' nodes receive');
+  drawNet(ctxB,cvB,numNodes,false,destNode,null,'routed: only N'+(destNode+1));
+}
+
+SimLib.slider('Nodes', 3, 7, 1, 4, function(v){ numNodes=v; destNode=Math.min(destNode,v-1); reset(); });
+SimLib.slider('Dest node', 1, 4, 1, 3, function(v){ destNode=v-1; draw([],[]);});
+SimLib.makeButton('Send packet', sendPacket);
+SimLib.makeButton('Reset', reset);
+var met=SimLib.metrics();
+reset();
 </script>
 </body>
 </html>

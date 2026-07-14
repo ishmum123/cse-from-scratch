@@ -1,1 +1,110 @@
-../../../../browser/chapter60/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Inference Servers Exist</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Inference Servers Exist</h1>
+<p>One request per GPU: GPU sits idle between requests — low utilization, wasted capacity. Batched inference server: multiple requests share one GPU forward pass — utilization soars.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Watch GPU utilization with and without batching.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'One request per GPU', 'Batched inference server', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'single util%', color:'#ef5350'},{label:'batched util%', color:'#43a047'}], 80);
+
+var numGPUs = 2;
+var batchSize = 4;
+var requestsPerTick = 3;
+var tickN = 0, lastTs = 0;
+var singleUtil = 0, batchUtil = 0, utilTicks = 0;
+
+function reset() {
+  tickN = 0; singleUtil = 0; batchUtil = 0; utilTicks = 0;
+  strip.reset();
+  met.update({ tick: 0, 'single util': '0%', 'batch util': '0%', throughput: 0 });
+  document.getElementById('status').textContent = 'Running.';
+}
+
+function drawGPUs(ctx, cv, gpus, label) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width, n = gpus.length;
+  var bw = Math.floor((W - 20) / n) - 4;
+  for (var i = 0; i < n; i++) {
+    var x = 10 + i * (bw + 4);
+    var util = gpus[i].util;
+    var barH = Math.round(util * 100);
+    ctx.fillStyle = util > 0.7 ? '#c8e6c9' : (util > 0.3 ? '#fff9c4' : '#ffcdd2');
+    ctx.fillRect(x, 140 - barH, bw, barH);
+    ctx.strokeStyle = '#bbb'; ctx.strokeRect(x, 40, bw, 100);
+    ctx.fillStyle = '#333'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('GPU' + (i + 1), x + bw / 2, 57);
+    ctx.font = '9px sans-serif'; ctx.fillText(Math.round(util * 100) + '%', x + bw / 2, 152);
+    ctx.fillText('reqs: ' + gpus[i].reqs, x + bw / 2, 165);
+  }
+  var avgUtil = gpus.reduce(function(a, g) { return a + g.util; }, 0) / n;
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(label + ' | avg: ' + Math.round(avgUtil * 100) + '%', W / 2, 185);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 450) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts; tickN++; utilTicks++;
+
+  // Single: each GPU handles one req at a time; if no req arrives, idle
+  var singleGPUs = [];
+  for (var i = 0; i < numGPUs; i++) {
+    var hasReq = i < requestsPerTick;
+    singleGPUs.push({ util: hasReq ? 1.0 : 0.1, reqs: hasReq ? 1 : 0 });
+  }
+  var sNow = singleGPUs.reduce(function(a, g) { return a + g.util; }, 0) / numGPUs;
+  singleUtil += sNow;
+
+  // Batched: server collects batchSize requests, saturates one GPU
+  var batchGPUs = [];
+  var effectiveReqs = Math.min(requestsPerTick * numGPUs, batchSize);
+  for (var j = 0; j < numGPUs; j++) {
+    var bReqs = j === 0 ? effectiveReqs : 0;
+    var bUtil = bReqs > 0 ? Math.min(1, bReqs / batchSize) : 0.05;
+    batchGPUs.push({ util: bUtil, reqs: bReqs });
+  }
+  var bNow = batchGPUs.reduce(function(a, g) { return a + g.util; }, 0) / numGPUs;
+  batchUtil += bNow;
+
+  var sPct = Math.round(singleUtil / utilTicks * 100);
+  var bPct = Math.round(batchUtil / utilTicks * 100);
+  strip.push(0, sPct);
+  strip.push(1, bPct);
+  drawGPUs(ctxA, cvA, singleGPUs, '1-req-per-GPU');
+  drawGPUs(ctxB, cvB, batchGPUs, 'Batched server');
+  met.update({ tick: tickN, 'single util': sPct + '%', 'batch util': bPct + '%', throughput: effectiveReqs + '/tick' });
+  document.getElementById('status').textContent =
+    'Single GPU util: ' + sPct + '% | Batched util: ' + bPct + '% | Batch throughput: ' + effectiveReqs + '/tick';
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('GPUs', 1, 4, 1, 2, function(v) { numGPUs = v; reset(); });
+SimLib.slider('Batch size', 2, 16, 2, 4, function(v) { batchSize = v; });
+SimLib.slider('Requests/tick', 1, 8, 1, 3, function(v) { requestsPerTick = v; });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId = requestAnimationFrame(frame);
+</script>
+</body>
+</html>

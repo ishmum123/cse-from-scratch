@@ -1,1 +1,129 @@
-../../../../browser/chapter27/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Virtual Memory Exists</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Virtual Memory Exists</h1>
+<p>Direct physical allocation fragments quickly and wastes memory. Virtual paging maps logical pages to scattered physical frames, hiding fragmentation.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Allocate programs and watch fragmentation.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Physical only (fragmentation)', 'Virtual paging (any frame)', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'phys wasted%', color:'#ef5350'},{label:'virt wasted%', color:'#43a047'}], 60);
+
+var FRAMES = 16;
+var pageSize = 2; // pages per allocation
+
+// Physical: allocate contiguously; fail if no contiguous block
+var physFrames, physAllocs, physFailed;
+// Virtual: allocate to any free frame via page table
+var virtFrames, virtAllocs, virtFailed, pageTable;
+var allocCount = 0;
+var colors = ['#90caf9','#a5d6a7','#ffe082','#ef9a9a','#ce93d8','#80cbc4','#ffcc80','#f48fb1'];
+
+function reset() {
+  physFrames = new Array(FRAMES).fill(null);
+  virtFrames = new Array(FRAMES).fill(null);
+  physAllocs = []; virtAllocs = []; physFailed = 0; virtFailed = 0;
+  allocCount = 0; pageTable = {};
+  strip.reset();
+  met.update({'phys failed':0,'virt failed':0,'phys free':FRAMES,'virt free':FRAMES});
+  document.getElementById('status').textContent = 'Press Allocate to add programs.';
+  draw();
+}
+
+function physAllocate(n) {
+  // find contiguous run of n free frames
+  for (var i=0; i<=FRAMES-n; i++) {
+    var ok=true;
+    for (var j=0;j<n;j++) if (physFrames[i+j]!==null){ok=false;break;}
+    if (ok) { for(var k=0;k<n;k++) physFrames[i+k]=allocCount; return true; }
+  }
+  return false;
+}
+
+function virtAllocate(n) {
+  var free = [];
+  for (var i=0;i<FRAMES;i++) if (virtFrames[i]===null) free.push(i);
+  if (free.length<n) return false;
+  for (var j=0;j<n;j++) virtFrames[free[j]]=allocCount;
+  return true;
+}
+
+function freeRandom(frames) {
+  var allocs = [];
+  frames.forEach(function(v){if(v!==null && allocs.indexOf(v)<0) allocs.push(v);});
+  if (!allocs.length) return;
+  var victim = allocs[Math.floor(Math.random()*allocs.length)];
+  for (var i=0;i<frames.length;i++) if(frames[i]===victim) frames[i]=null;
+}
+
+function drawFrames(ctx, cv, frames) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var W=cv.width, cols=8, rows=FRAMES/cols, fw=(W-20)/cols, fh=28;
+  var startX=10, startY=20;
+  for (var i=0;i<FRAMES;i++) {
+    var col=i%cols, row=Math.floor(i/cols);
+    var x=startX+col*fw, y=startY+row*(fh+4);
+    var v=frames[i];
+    ctx.fillStyle=v===null?'#f5f5f5':colors[v%colors.length];
+    ctx.fillRect(x,y,fw-2,fh);
+    ctx.strokeStyle='#ccc'; ctx.strokeRect(x,y,fw-2,fh);
+    ctx.fillStyle='#333'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(v===null?'—':'P'+v, x+fw/2-1, y+fh/2+3);
+  }
+  var free=frames.filter(function(v){return v===null;}).length;
+  ctx.fillStyle='#555'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Free: '+free+'/'+FRAMES, W/2, cv.height-6);
+}
+
+function draw() {
+  drawFrames(ctxA, cvA, physFrames);
+  drawFrames(ctxB, cvB, virtFrames);
+  var pf=physFrames.filter(function(v){return v===null;}).length;
+  var vf=virtFrames.filter(function(v){return v===null;}).length;
+  var pw=Math.round((FRAMES-pf)/FRAMES*100*10)/10;
+  var vw=Math.round((FRAMES-vf)/FRAMES*100*10)/10;
+  strip.push(0, physFailed*10);
+  strip.push(1, virtFailed*10);
+  met.update({'phys failed':physFailed,'virt failed':virtFailed,'phys free':pf,'virt free':vf});
+}
+
+SimLib.slider('Pages/alloc', 1, 4, 1, 2, function(v){ pageSize=v; });
+SimLib.makeButton('Allocate', function(){
+  allocCount++;
+  var pr = physAllocate(pageSize);
+  var vr = virtAllocate(pageSize);
+  if (!pr) physFailed++;
+  if (!vr) virtFailed++;
+  draw();
+  document.getElementById('status').textContent =
+    'Alloc #'+allocCount+' ('+pageSize+' pages): phys='+(pr?'OK':'FAILED')+', virt='+(vr?'OK':'FAILED')+
+    '. Phys failures: '+physFailed+', Virt failures: '+virtFailed;
+});
+SimLib.makeButton('Free random', function(){
+  freeRandom(physFrames); freeRandom(virtFrames); draw();
+  document.getElementById('status').textContent = 'Freed a random allocation on each side.';
+});
+SimLib.makeButton('Reset', reset);
+var met = SimLib.metrics();
+reset();
+</script>
+</body>
+</html>

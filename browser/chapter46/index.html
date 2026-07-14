@@ -5,41 +5,105 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Caches Exist</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Caches Exist</h1>
-<p>Store hot data close to the consumer.</p><div class="controls"><button id="request">Request key</button><button id="reset">Reset</button></div><canvas id="c" width="600" height="200"></canvas><div id="status">Cache hits avoid slow backend lookups.</div>
+<p>No cache: every request hits the slow backend. Cache (LRU): hot keys served from memory — latency drops, backend load falls.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Watch latency difference as cache warms up.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'No cache (always DB)', 'LRU Cache', 320, 200);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'no-cache latency', color:'#ef5350'},{label:'cache latency', color:'#43a047'}], 80);
 
-const backend = {a:1,b:2,c:3,d:4,e:5};
-const cache = {};
-const hotKeys = ['a','a','b','a','c','a'];
-let idx = 0;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw(hit, key) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#e3f2fd'; ctx.fillRect(80, 60, 160, 80); ctx.strokeRect(80, 60, 160, 80); ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Cache', 160, 90); ctx.fillText(Object.keys(cache).join(', ') || 'empty', 160, 115);
-  ctx.fillStyle = '#c8e6c9'; ctx.fillRect(360, 60, 160, 80); ctx.strokeRect(360, 60, 160, 80); ctx.fillStyle = '#333'; ctx.fillText('Backend', 440, 90);
-  ctx.beginPath(); ctx.moveTo(240, 100); ctx.lineTo(360, 100); ctx.strokeStyle = hit ? '#66bb6a' : '#ef5350'; ctx.stroke(); ctx.strokeStyle = '#000';
-  document.getElementById('status').textContent = `Request ${key}: ${hit ? 'cache hit' : 'cache miss'}.`;
+var cacheSize = 5;
+var keySpace = 10;
+var dbLatency = 100;
+var tickN = 0, lastTs = 0;
+var cacheHits = 0, cacheMisses = 0;
+var cacheKeys = []; // LRU list
+
+function reset() {
+  tickN = 0; cacheHits = 0; cacheMisses = 0; cacheKeys = [];
+  strip.reset();
+  met.update({ tick: 0, hits: 0, misses: 0, 'hit rate': '0%' });
+  document.getElementById('status').textContent = 'Running.';
 }
-document.getElementById('request').onclick = () => {
-  const key = hotKeys[idx % hotKeys.length];
-  const hit = key in cache;
-  if (!hit) cache[key] = backend[key];
-  draw(hit, key);
-  idx++;
-};
-document.getElementById('reset').onclick = () => { Object.keys(cache).forEach(k => delete cache[k]); idx = 0; draw(false, '-'); };
-draw(false, '-');
 
+function drawPanel(ctx, cv, key, isHit, avgLatency, requests, label) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  ctx.fillStyle = isHit ? '#c8e6c9' : '#ffcdd2';
+  ctx.fillRect(W / 2 - 55, 35, 110, 50);
+  ctx.strokeStyle = '#bbb'; ctx.strokeRect(W / 2 - 55, 35, 110, 50);
+  ctx.fillStyle = '#333'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(label, W / 2, 55);
+  ctx.fillText((isHit ? 'HIT' : 'MISS') + ' key=' + key, W / 2, 75);
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif';
+  ctx.fillText('avg latency: ' + avgLatency.toFixed(0) + 'ms', W / 2, 110);
+  ctx.fillText('requests: ' + requests, W / 2, 128);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 350) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts; tickN++;
+
+  // Zipf-like: key 0 and 1 are most popular
+  var rand = Math.random();
+  var key = rand < 0.5 ? Math.floor(rand * 4) : Math.floor(Math.random() * keySpace);
+
+  // No-cache: always db latency
+  var noCacheLatency = dbLatency;
+
+  // Cache (LRU)
+  var idx = cacheKeys.indexOf(key);
+  var isHit = idx >= 0;
+  var cacheLatency;
+  if (isHit) {
+    cacheHits++;
+    cacheLatency = 5; // cache hit is fast
+    // move to front
+    cacheKeys.splice(idx, 1); cacheKeys.unshift(key);
+  } else {
+    cacheMisses++;
+    cacheLatency = dbLatency; // miss: fetch from DB
+    cacheKeys.unshift(key);
+    if (cacheKeys.length > cacheSize) cacheKeys.pop();
+  }
+
+  var total = cacheHits + cacheMisses;
+  var hitRate = total > 0 ? Math.round(cacheHits / total * 100) : 0;
+  var avgCacheLat = (cacheHits * 5 + cacheMisses * dbLatency) / Math.max(1, total);
+
+  strip.push(0, noCacheLatency);
+  strip.push(1, cacheLatency);
+  drawPanel(ctxA, cvA, key, false, noCacheLatency, tickN, 'No cache');
+  drawPanel(ctxB, cvB, key, isHit, avgCacheLat, tickN, 'LRU cache');
+  met.update({ tick: tickN, hits: cacheHits, misses: cacheMisses, 'hit rate': hitRate + '%' });
+  document.getElementById('status').textContent =
+    'Hit rate: ' + hitRate + '% | Cache latency: ' + cacheLatency + 'ms vs DB: ' + dbLatency + 'ms';
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Cache size', 1, 10, 1, 5, function(v) { cacheSize = v; reset(); });
+SimLib.slider('Key space', 5, 20, 5, 10, function(v) { keySpace = v; reset(); });
+SimLib.slider('DB latency ms', 20, 200, 20, 100, function(v) { dbLatency = v; });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId = requestAnimationFrame(frame);
 </script>
 </body>
 </html>

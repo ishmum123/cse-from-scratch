@@ -5,40 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Deadlocks Happen</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Deadlocks Happen</h1>
-<p>Two threads each hold one resource and wait for the other.</p><div class="controls"><button id="step">Step</button><button id="reset">Reset</button></div><canvas id="c" width="500" height="300"></canvas><div id="status">A circular wait creates deadlock.</div>
+<p>Lock ordering matters. Left panel: both threads grab locks in opposite order — circular wait, deadlock. Right panel: both use same order — no cycle, they proceed.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Step through the lock acquisition sequence.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Opposite order → Deadlock', 'Same order → Progress', 320, 220);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
 
-const t1 = {x:150,y:80,hasR1:true,hasR2:false};
-const t2 = {x:350,y:80,hasR1:false,hasR2:true};
-const r1 = {x:150,y:220}; const r2 = {x:350,y:220};
-let step = 0;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = t1.hasR1 ? '#66bb6a' : '#e0e0e0'; ctx.beginPath(); ctx.arc(r1.x, r1.y, 25, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = t2.hasR2 ? '#66bb6a' : '#e0e0e0'; ctx.beginPath(); ctx.arc(r2.x, r2.y, 25, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#333'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('R1', r1.x, r1.y+5); ctx.fillText('R2', r2.x, r2.y+5);
-  ctx.fillStyle = '#90caf9'; ctx.fillRect(t1.x-30, t1.y-20, 60, 40); ctx.strokeRect(t1.x-30, t1.y-20, 60, 40); ctx.fillText('T1', t1.x, t1.y+5);
-  ctx.fillStyle = '#90caf9'; ctx.fillRect(t2.x-30, t2.y-20, 60, 40); ctx.strokeRect(t2.x-30, t2.y-20, 60, 40); ctx.fillText('T2', t2.x, t2.y+5);
-  if (t1.hasR1) { ctx.beginPath(); ctx.moveTo(t1.x, t1.y+20); ctx.lineTo(r1.x, r1.y-25); ctx.stroke(); }
-  if (t2.hasR2) { ctx.beginPath(); ctx.moveTo(t2.x, t2.y+20); ctx.lineTo(r2.x, r2.y-25); ctx.stroke(); }
-  if (step >= 1) { ctx.beginPath(); ctx.moveTo(t1.x+30, t1.y); ctx.lineTo(r2.x-25, r2.y); ctx.strokeStyle = '#ef5350'; ctx.stroke(); ctx.strokeStyle = '#000'; }
-  if (step >= 2) { ctx.beginPath(); ctx.moveTo(t2.x-30, t2.y); ctx.lineTo(r1.x+25, r1.y); ctx.strokeStyle = '#ef5350'; ctx.stroke(); ctx.strokeStyle = '#000'; }
+// State for each panel
+// steps for deadlock scenario: T1 grabs L1, T2 grabs L2, T1 waits L2, T2 waits L1 -> deadlock
+// steps for ordered scenario: T1 grabs L1, T1 grabs L2, T1 releases both, T2 grabs L1, T2 grabs L2, done
+var stepN = 0;
+var maxStep = 4;
+
+var deadStates = [
+  {t1:'idle',t2:'idle',l1:'free',l2:'free',msg:'Initial: both threads idle, locks free.'},
+  {t1:'holds L1',t2:'holds L2',l1:'T1',l2:'T2',msg:'T1 grabs L1; T2 grabs L2 simultaneously.'},
+  {t1:'holds L1, waits L2',t2:'holds L2, waits L1',l1:'T1',l2:'T2',msg:'T1 wants L2 (held by T2); T2 wants L1 (held by T1).'},
+  {t1:'DEADLOCKED',t2:'DEADLOCKED',l1:'T1',l2:'T2',msg:'Circular wait → DEADLOCK. Neither thread can proceed.'}
+];
+var ordStates = [
+  {t1:'idle',t2:'idle',l1:'free',l2:'free',msg:'Initial.'},
+  {t1:'holds L1',t2:'waiting L1',l1:'T1',l2:'free',msg:'T1 grabs L1 first; T2 also wants L1 — waits.'},
+  {t1:'holds L1+L2',t2:'waiting L1',l1:'T1',l2:'T1',msg:'T1 grabs L2. T2 still waits.'},
+  {t1:'done (released)',t2:'holds L1+L2',l1:'T2',l2:'T2',msg:'T1 finishes and releases; T2 acquires both locks.'},
+  {t1:'done',t2:'done (released)',l1:'free',l2:'free',msg:'T2 finishes. Both done — no deadlock!'}
+];
+
+function drawPanel(ctx, cv, states, stepIdx) {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var s = states[Math.min(stepIdx, states.length-1)];
+  var W=cv.width;
+  // draw threads
+  function drawBox(x,y,w,h,fill,text1,text2) {
+    ctx.fillStyle=fill; ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle='#bbb'; ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle='#333'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(text1,x+w/2,y+h/2-4);
+    ctx.font='10px sans-serif';
+    ctx.fillText(text2,x+w/2,y+h/2+10);
+  }
+  var deadlocked = s.t1==='DEADLOCKED';
+  drawBox(20,30,120,50, deadlocked?'#ffcdd2':'#90caf9', 'Thread 1', s.t1);
+  drawBox(W-140,30,120,50, deadlocked?'#ffcdd2':'#90caf9', 'Thread 2', s.t2);
+  // locks
+  var l1color = s.l1==='free'?'#e8f5e9':(s.l1==='T1'?'#90caf9':'#ef9a9a');
+  var l2color = s.l2==='free'?'#e8f5e9':(s.l2==='T1'?'#90caf9':'#ef9a9a');
+  drawBox(W/2-65,110,60,40, l1color, 'Lock 1', s.l1==='free'?'free':'held by '+s.l1);
+  drawBox(W/2+5,110,60,40, l2color, 'Lock 2', s.l2==='free'?'free':'held by '+s.l2);
+  // state label
+  ctx.fillStyle='#555'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Step '+Math.min(stepIdx,states.length-1)+'/'+( states.length-1), W/2, cv.height-6);
 }
-document.getElementById('step').onclick = () => { step = Math.min(step + 1, 2); if (step === 2) document.getElementById('status').textContent = 'Deadlock: each thread waits for the other.'; draw(); };
-document.getElementById('reset').onclick = () => { step = 0; draw(); };
-draw();
 
+function draw() {
+  drawPanel(ctxA, cvA, deadStates, stepN);
+  drawPanel(ctxB, cvB, ordStates, stepN);
+  var ds = deadStates[Math.min(stepN,deadStates.length-1)];
+  var os = ordStates[Math.min(stepN,ordStates.length-1)];
+  met.update({'deadlock state':ds.t1, 'ordered state':os.t1});
+  document.getElementById('status').textContent = 'Deadlock: '+ds.msg+' | Ordered: '+os.msg;
+}
+
+SimLib.makeButton('Step forward', function(){
+  stepN = Math.min(stepN+1, Math.max(deadStates.length, ordStates.length)-1);
+  draw();
+});
+SimLib.makeButton('Reset', function(){ stepN=0; draw(); });
+var met = SimLib.metrics();
+met.update({'deadlock state':'idle','ordered state':'idle'});
+draw();
 </script>
 </body>
 </html>

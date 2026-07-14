@@ -1,1 +1,140 @@
-../../../../browser/chapter58/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Tensor Parallelism Exists</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Tensor Parallelism Exists</h1>
+<p>Single device: one GPU holds the whole weight matrix — memory-capped and slow for large models. Tensor parallel: the matrix is sharded column-wise across K devices — each device holds 1/K, all compute in parallel.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Watch per-device memory and total compute time vs device count.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+var container = document.getElementById('ab-container');
+var refs = SimLib.sideBySide(container, 'Single device', 'Tensor parallel (K devices)', 320, 210);
+var ctxA = refs[0], ctxB = refs[1], cvA = refs[2], cvB = refs[3];
+var strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{label:'single time', color:'#ef5350'},{label:'parallel time', color:'#43a047'}], 80);
+
+var deviceCount = 4;
+var modelGB = 40; // total weight memory in GB (schematic)
+var baseTime = 100; // single-device compute time (schematic ms)
+var VRAM_CAP = 24; // GB per device
+var tickN = 0, lastTs = 0;
+
+function reset() {
+  tickN = 0;
+  strip.reset();
+  met.update({ devices: deviceCount, 'single mem': modelGB + 'GB', 'per-dev mem': (modelGB / deviceCount).toFixed(1) + 'GB', speedup: deviceCount + 'x' });
+  document.getElementById('status').textContent = 'Running.';
+}
+
+function drawSingle(ctx, cv) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  var oomFits = modelGB <= VRAM_CAP;
+  ctx.fillStyle = oomFits ? '#c8e6c9' : '#ffcdd2';
+  ctx.fillRect(W / 2 - 55, 20, 110, 100);
+  ctx.strokeStyle = '#bbb'; ctx.strokeRect(W / 2 - 55, 20, 110, 100);
+  ctx.fillStyle = '#333'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('GPU 0', W / 2, 40);
+  ctx.font = '10px sans-serif';
+  ctx.fillText('VRAM cap: ' + VRAM_CAP + 'GB', W / 2, 58);
+  ctx.fillText('Model: ' + modelGB + 'GB', W / 2, 74);
+  if (!oomFits) {
+    ctx.fillStyle = '#c62828'; ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('OOM!', W / 2, 92);
+  } else {
+    ctx.fillStyle = '#2e7d32'; ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('Fits (' + (modelGB / VRAM_CAP * 100).toFixed(0) + '%)', W / 2, 92);
+  }
+  ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Compute: ' + baseTime + 'ms (schematic)', W / 2, 145);
+  ctx.fillText('All ' + modelGB + 'GB on 1 device', W / 2, 162);
+}
+
+function drawParallel(ctx, cv, K) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var W = cv.width;
+  var perDevMem = modelGB / K;
+  var parallelTime = Math.ceil(baseTime / K) + 5; // +5ms allreduce
+  var fits = perDevMem <= VRAM_CAP;
+
+  var cols = Math.min(K, 4);
+  var rows = Math.ceil(K / cols);
+  var bw = Math.floor((W - 20) / cols) - 4;
+  var bh = 38;
+
+  for (var i = 0; i < K; i++) {
+    var col = i % cols;
+    var row = Math.floor(i / cols);
+    var x = 10 + col * (bw + 4);
+    var y = 12 + row * (bh + 6);
+    ctx.fillStyle = fits ? '#c8e6c9' : '#fff9c4';
+    ctx.fillRect(x, y, bw, bh);
+    ctx.strokeStyle = '#bbb'; ctx.strokeRect(x, y, bw, bh);
+    ctx.fillStyle = '#333'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('GPU' + i, x + bw / 2, y + 13);
+    ctx.font = '7px sans-serif';
+    ctx.fillText(perDevMem.toFixed(1) + 'GB', x + bw / 2, y + 25);
+    ctx.fillText('W[:,j/' + K + ']', x + bw / 2, y + 35);
+  }
+
+  var baseY = 12 + rows * (bh + 6) + 4;
+  ctx.fillStyle = '#e3f2fd';
+  ctx.fillRect(10, baseY, W - 20, 14);
+  ctx.strokeStyle = '#90caf9'; ctx.strokeRect(10, baseY, W - 20, 14);
+  ctx.fillStyle = '#1565c0'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('AllReduce — gather partial products', W / 2, baseY + 10);
+
+  ctx.fillStyle = '#555'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Compute: ~' + parallelTime + 'ms | Per-dev: ' + perDevMem.toFixed(1) + 'GB', W / 2, baseY + 30);
+  ctx.fillStyle = fits ? '#2e7d32' : '#e65100'; ctx.font = 'bold 10px sans-serif';
+  ctx.fillText(fits ? 'Fits in VRAM (' + K + ' devices)' : 'Tight — try more devices', W / 2, baseY + 46);
+}
+
+function frame(ts) {
+  if (ts - lastTs < 600) { state.rafId = requestAnimationFrame(frame); return; }
+  lastTs = ts; tickN++;
+
+  var perDevMem = modelGB / deviceCount;
+  var parallelTime = Math.ceil(baseTime / deviceCount) + 5;
+
+  strip.push(0, baseTime);
+  strip.push(1, parallelTime);
+  drawSingle(ctxA, cvA);
+  drawParallel(ctxB, cvB, deviceCount);
+  met.update({
+    devices: deviceCount,
+    'single mem': modelGB + 'GB',
+    'per-dev mem': perDevMem.toFixed(1) + 'GB',
+    'single time': baseTime + 'ms',
+    'parallel time': parallelTime + 'ms',
+    speedup: (baseTime / parallelTime).toFixed(1) + 'x'
+  });
+  document.getElementById('status').textContent =
+    deviceCount + ' devices | Per-dev: ' + perDevMem.toFixed(1) + 'GB (cap=' + VRAM_CAP + 'GB) | Time: ' + baseTime + 'ms → ' + parallelTime + 'ms';
+
+  if (!state.paused) state.rafId = requestAnimationFrame(frame);
+}
+
+SimLib.slider('Device count', 1, 8, 1, 4, function(v) { deviceCount = v; reset(); });
+SimLib.slider('Model size (GB)', 10, 160, 10, 40, function(v) { modelGB = v; reset(); });
+var state = SimLib.pauseResumeReset(frame, reset);
+var met = SimLib.metrics();
+reset();
+state.rafId = requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -5,45 +5,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Hashing Exists</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Hashing Exists</h1>
-<p>Map keys to buckets with a hash function. Watch collisions occur.</p><div class="controls"><input id="key" type="text" placeholder="Key"><button id="insert">Insert</button><button id="reset">Reset</button></div><canvas id="c" width="700" height="260"></canvas><div id="status">Type a key and insert it into the hash table.</div>
+<p>Linear scan checks every slot. A hash function maps directly to the target slot. A/B comparison.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Insert keys and then search.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Linear Array (O(n))', 'Hash Table (O(1))', 320, 220);
 
-const buckets = Array(8).fill(0).map(() => []);
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function hash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % buckets.length; return h; }
-function draw(hi=-1) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  buckets.forEach((b, i) => {
-    ctx.fillStyle = i === hi ? '#ffcc80' : '#e8f5e9';
-    ctx.fillRect(20, 20 + i * 28, 80, 24);
-    ctx.strokeRect(20, 20 + i * 28, 80, 24);
-    ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`bucket ${i}`, 60, 37 + i * 28);
-    b.forEach((k, j) => {
-      ctx.fillStyle = '#90caf9'; ctx.fillRect(110 + j * 70, 20 + i * 28, 65, 24); ctx.strokeRect(110 + j * 28, 20 + i * 28, 65, 24);
-      ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(k, 142 + j * 70, 37 + i * 28);
-    });
-  });
+const SLOTS = 11;
+const linearArr = new Array(SLOTS).fill(null);
+const hashTable = new Array(SLOTS).fill(null);
+let searchKey = null, linStep = -1, hashStep = -1, linFound = -1, hashFound = -1;
+let linDone = false, hashDone = false;
+let rafId = null, lastTick = 0;
+let insertedCount = 0;
+
+function hashFn(k) { return ((k % SLOTS) + SLOTS) % SLOTS; }
+
+function drawLinear(highlight, found) {
+  const cv = cvA; const ctx = ctxA;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cellH = 36, startY = 40, cellW = cv.width - 40, startX = 20;
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('Array (sequential)', startX, 28);
+  for (let i = 0; i < SLOTS; i++) {
+    const y = startY + i * cellH;
+    const isCur = i === highlight, isFound = i === found;
+    const past = highlight >= 0 && i < highlight;
+    ctx.fillStyle = isFound ? '#c8e6c9' : (isCur ? '#fff176' : (past ? '#ffcdd2' : '#f5f5f5'));
+    ctx.fillRect(startX, y, cellW, cellH - 2);
+    ctx.strokeStyle = (isCur || isFound) ? '#f57f17' : '#ccc';
+    ctx.lineWidth = (isCur || isFound) ? 2 : 1;
+    ctx.strokeRect(startX, y, cellW, cellH - 2);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#888'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('[' + i + ']', startX + 4, y + 22);
+    if (linearArr[i] !== null) {
+      ctx.fillStyle = '#333'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(linearArr[i], startX + cellW / 2, y + 22);
+    }
+  }
 }
-document.getElementById('insert').onclick = () => {
-  const k = document.getElementById('key').value || 'key';
-  const h = hash(k);
-  buckets[h].push(k);
-  document.getElementById('status').textContent = `Hash("${k}") = ${h}. Collisions: ${buckets[h].length > 1 ? 'yes' : 'no'}.`;
-  draw(h);
-};
-document.getElementById('reset').onclick = () => { buckets.forEach(b => b.length = 0); draw(); };
-draw();
 
+function drawHash(highlight, found) {
+  const cv = cvB; const ctx = ctxB;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cellH = 36, startY = 40, cellW = cv.width - 40, startX = 20;
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('Hash table (key % ' + SLOTS + ')', startX, 28);
+  for (let i = 0; i < SLOTS; i++) {
+    const y = startY + i * cellH;
+    const isCur = i === highlight, isFound = i === found;
+    ctx.fillStyle = isFound ? '#c8e6c9' : (isCur ? '#fff176' : '#f5f5f5');
+    ctx.fillRect(startX, y, cellW, cellH - 2);
+    ctx.strokeStyle = (isCur || isFound) ? '#f57f17' : '#ccc';
+    ctx.lineWidth = (isCur || isFound) ? 2 : 1;
+    ctx.strokeRect(startX, y, cellW, cellH - 2);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#888'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('[' + i + ']', startX + 4, y + 22);
+    if (hashTable[i] !== null) {
+      ctx.fillStyle = '#333'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(hashTable[i], startX + cellW / 2, y + 22);
+    }
+  }
+}
+
+function drawBoth() {
+  drawLinear(linStep, linFound);
+  drawHash(hashStep, hashFound);
+}
+
+const keyInp = SimLib.numberInput('Key', 1, 99, 7, function () {});
+
+SimLib.makeButton('Insert', function () {
+  const k = Number(keyInp.value);
+  // linear: fill next empty slot
+  for (let i = 0; i < SLOTS; i++) { if (linearArr[i] === null) { linearArr[i] = k; break; } }
+  // hash: find slot via hash, then linear probe
+  let h = hashFn(k);
+  for (let i = 0; i < SLOTS; i++) { const s = (h + i) % SLOTS; if (hashTable[s] === null) { hashTable[s] = k; break; } }
+  insertedCount++;
+  document.getElementById('status').textContent = 'Inserted ' + k + ' (hash slot: ' + hashFn(k) + ').';
+  met.update({ inserted: insertedCount, 'hash fn': 'k % ' + SLOTS });
+  linStep = -1; linFound = -1; hashStep = -1; hashFound = -1;
+  drawBoth();
+});
+
+SimLib.makeButton('Search', function () {
+  const k = Number(keyInp.value);
+  searchKey = k;
+  linStep = -1; linFound = -1; hashStep = -1; hashFound = -1; linDone = false; hashDone = false;
+  lastTick = 0;
+  if (rafId) cancelAnimationFrame(rafId);
+
+  // linear: scan from 0
+  let li = 0;
+  // hash: go straight to hash slot
+  const hs = hashFn(k);
+  hashStep = hs;
+  if (hashTable[hs] === k) { hashFound = hs; hashDone = true; }
+  else { hashDone = true; hashStep = hs; } // simple: only 1 lookup shown
+
+  function tick(ts) {
+    if (ts - lastTick < 350) { rafId = requestAnimationFrame(tick); return; }
+    lastTick = ts;
+    if (!linDone) {
+      linStep = li;
+      if (linearArr[li] === k) { linFound = li; linDone = true; }
+      else if (li >= SLOTS - 1) { linDone = true; }
+      else { li++; }
+    }
+    drawBoth();
+    const lc = linDone ? (linFound >= 0 ? linFound + 1 : SLOTS) : li + 1;
+    met.update({ 'search key': k, 'linear checks': lc, 'hash checks': 1, savings: Math.max(0, lc - 1) });
+    if (linDone) {
+      document.getElementById('status').textContent = 'Linear: ' + lc + ' checks. Hash: 1 check (direct to slot ' + hs + ').';
+      rafId = null;
+    } else {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+  rafId = requestAnimationFrame(tick);
+});
+
+SimLib.makeButton('Reset', function () {
+  linearArr.fill(null); hashTable.fill(null);
+  insertedCount = 0; linStep = -1; linFound = -1; hashStep = -1; hashFound = -1;
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  drawBoth();
+  document.getElementById('status').textContent = 'Cleared.';
+  met.update({ inserted: 0, 'hash fn': 'k % ' + SLOTS });
+});
+
+const met = SimLib.metrics();
+met.update({ inserted: 0, 'hash fn': 'k % ' + SLOTS });
+drawBoth();
 </script>
 </body>
 </html>

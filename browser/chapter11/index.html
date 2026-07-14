@@ -5,31 +5,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Balancing Exists</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Balancing Exists</h1>
-<p>Insert sorted data and see the tree become a slow linked list.</p><div class="controls"><button id="random">Insert random</button><button id="sorted">Insert sorted</button><button id="reset">Reset</button></div><canvas id="c" width="700" height="300"></canvas><div id="status">Sorted input destroys an unbalanced BST.</div>
+<p>Feed sorted data to a BST → degenerate chain. A balanced tree stays O(log n).</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press "Insert sorted" to see both trees grow.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Unbalanced BST', 'Balanced (AVL-style)', 320, 280);
 
-class Node { constructor(v) { this.v = v; this.l = null; this.r = null; this.x = 0; this.y = 0; } }
-let root = null;
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function insert(v) { if (!root) { root = new Node(v); return; } let n = root; while (true) { if (v < n.v) { if (!n.l) { n.l = new Node(v); return; } n = n.l; } else { if (!n.r) { n.r = new Node(v); return; } n = n.r; } } }
-function layout(n, x, y, gap) { if (!n) return; n.x = x; n.y = y; layout(n.l, x - gap, y + 40, gap / 2); layout(n.r, x + gap, y + 40, gap / 2); }
-function drawNode(n) { if (!n) return; if (n.l) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.l.x, n.l.y); ctx.stroke(); drawNode(n.l); } if (n.r) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.r.x, n.r.y); ctx.stroke(); drawNode(n.r); } ctx.beginPath(); ctx.arc(n.x, n.y, 15, 0, Math.PI*2); ctx.fillStyle = '#e3f2fd'; ctx.fill(); ctx.stroke(); ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(n.v, n.x, n.y + 4); }
-function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); layout(root, canvas.width/2, 30, 160); drawNode(root); }
-document.getElementById('random').onclick = () => { root = null; const vals = Array.from({length: 15}, () => Math.floor(Math.random()*100)); vals.forEach(insert); document.getElementById('status').textContent = `Random insert: tree stays relatively bushy.`; draw(); };
-document.getElementById('sorted').onclick = () => { root = null; for (let i = 1; i <= 15; i++) insert(i*2); document.getElementById('status').textContent = `Sorted insert: tree degenerates to a linked list.`; draw(); };
-document.getElementById('reset').onclick = () => { root = null; draw(); };
-draw();
+// Simple BST
+class BSTNode { constructor(v) { this.v = v; this.l = null; this.r = null; this.x = 0; this.y = 0; } }
+let bstRoot = null, bstCount = 0;
 
+function bstInsert(v) {
+  if (!bstRoot) { bstRoot = new BSTNode(v); bstCount++; return; }
+  let n = bstRoot;
+  while (true) {
+    if (v <= n.v) { if (!n.l) { n.l = new BSTNode(v); break; } n = n.l; }
+    else { if (!n.r) { n.r = new BSTNode(v); break; } n = n.r; }
+  }
+  bstCount++;
+}
+
+function bstHeight(n) { if (!n) return 0; return 1 + Math.max(bstHeight(n.l), bstHeight(n.r)); }
+
+// Balanced tree: always insert into sorted array then rebuild as complete tree
+let balArr = [], balCount = 0;
+
+class BalNode { constructor(v) { this.v = v; this.l = null; this.r = null; this.x = 0; this.y = 0; } }
+
+function buildBalanced(arr, lo, hi) {
+  if (lo > hi) return null;
+  const mid = Math.floor((lo + hi) / 2);
+  const n = new BalNode(arr[mid]);
+  n.l = buildBalanced(arr, lo, mid - 1);
+  n.r = buildBalanced(arr, mid + 1, hi);
+  return n;
+}
+
+function balHeight(n) { if (!n) return 0; return 1 + Math.max(balHeight(n.l), balHeight(n.r)); }
+
+function layout(n, x, y, gap, ch) {
+  if (!n) return;
+  n.x = Math.max(14, Math.min(ch.width - 14, x));
+  n.y = y;
+  layout(n.l, x - gap, y + 40, Math.max(gap / 2, 16), ch);
+  layout(n.r, x + gap, y + 40, Math.max(gap / 2, 16), ch);
+}
+
+function drawTree(ctx, cv, root) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (!root) return;
+  layout(root, cv.width / 2, 22, 80, cv);
+  function draw(n) {
+    if (!n) return;
+    if (n.l) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.l.x, n.l.y); ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1; ctx.stroke(); draw(n.l); }
+    if (n.r) { ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.r.x, n.r.y); ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1; ctx.stroke(); draw(n.r); }
+    ctx.beginPath(); ctx.arc(n.x, n.y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = '#e3f2fd'; ctx.fill(); ctx.strokeStyle = '#90caf9'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(n.v, n.x, n.y);
+    ctx.textBaseline = 'alphabetic';
+  }
+  draw(root);
+}
+
+let nextVal = 1;
+
+function insertOne() {
+  const v = nextVal++;
+  bstInsert(v);
+  balArr.push(v);
+  balArr.sort(function (a, b) { return a - b; });
+  balCount++;
+  const balRoot = buildBalanced(balArr, 0, balArr.length - 1);
+  drawTree(ctxA, cvA, bstRoot);
+  drawTree(ctxB, cvB, balRoot);
+  const bh = bstHeight(bstRoot);
+  const blh = balHeight(balRoot);
+  document.getElementById('status').textContent = 'Inserted ' + v + '. BST height: ' + bh + ' (O(n)!). Balanced height: ' + blh + ' (O(log n)).';
+  met.update({ nodes: balCount, 'BST height': bh, 'balanced height': blh, 'ideal': Math.ceil(Math.log2(balCount + 1)) });
+}
+
+function reset() {
+  bstRoot = null; bstCount = 0;
+  balArr = []; balCount = 0;
+  nextVal = 1;
+  ctxA.clearRect(0, 0, cvA.width, cvA.height);
+  ctxB.clearRect(0, 0, cvB.width, cvB.height);
+  document.getElementById('status').textContent = 'Press "Insert sorted" to see both trees grow.';
+  met.update({ nodes: 0, 'BST height': 0, 'balanced height': 0, ideal: 0 });
+}
+
+SimLib.makeButton('Insert sorted (×1)', insertOne);
+SimLib.makeButton('Insert sorted (×5)', function () { for (let i = 0; i < 5; i++) insertOne(); });
+SimLib.makeButton('Reset', reset);
+
+const met = SimLib.metrics();
+met.update({ nodes: 0, 'BST height': 0, 'balanced height': 0, ideal: 0 });
 </script>
 </body>
 </html>

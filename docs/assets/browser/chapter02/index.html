@@ -1,1 +1,116 @@
-../../../../browser/chapter02/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Numbers Need Memory</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Numbers Need Memory</h1>
+<p>Without a register, each new number overwrites the last. Store it to keep it.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Memory is empty.</div>
+<canvas id="c" width="640" height="220"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const registers = [null, null, null];
+const labels = ['R0', 'R1', 'R2'];
+let activeReg = 0;
+let inputVal = 0;
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = '14px sans-serif';
+  ctx.textAlign = 'center';
+
+  // input bus at top
+  ctx.fillStyle = '#1565c0';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('Input: ' + inputVal, canvas.width / 2, 28);
+
+  // draw registers
+  const regW = 120, regH = 70, gap = 40;
+  const totalW = 3 * regW + 2 * gap;
+  const startX = (canvas.width - totalW) / 2;
+  const regY = 60;
+
+  registers.forEach(function (v, i) {
+    const x = startX + i * (regW + gap);
+    const isActive = i === activeReg;
+    ctx.fillStyle = isActive ? '#e3f2fd' : '#f5f5f5';
+    ctx.fillRect(x, regY, regW, regH);
+    ctx.strokeStyle = isActive ? '#1565c0' : '#ccc';
+    ctx.lineWidth = isActive ? 2 : 1;
+    ctx.strokeRect(x, regY, regW, regH);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#555';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(labels[i], x + regW / 2, regY - 6);
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillStyle = v !== null ? '#222' : '#ccc';
+    ctx.fillText(v !== null ? v : '—', x + regW / 2, regY + regH / 2 + 10);
+  });
+
+  // label under registers
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = '#888';
+  ctx.fillText('← select register →', canvas.width / 2, regY + regH + 24);
+
+  // show "without memory" scenario on the right
+  ctx.fillStyle = '#ef9a9a';
+  ctx.fillRect(canvas.width - 140, regY, 120, regH);
+  ctx.strokeStyle = '#c62828';
+  ctx.strokeRect(canvas.width - 140, regY, 120, regH);
+  ctx.fillStyle = '#c62828';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('No Register', canvas.width - 80, regY - 6);
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText(inputVal, canvas.width - 80, regY + regH / 2 + 8);
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#999';
+  ctx.fillText('(lost on change)', canvas.width - 80, regY + regH + 14);
+}
+
+const numInp = SimLib.numberInput('Value', -999, 9999, 0, function (v) {
+  inputVal = v;
+  document.getElementById('status').textContent = 'Value set to ' + v + '. Press Store to save.';
+  draw();
+});
+
+SimLib.makeButton('Store in R' + activeReg, function () {
+  registers[activeReg] = inputVal;
+  document.getElementById('status').textContent = 'Stored ' + inputVal + ' in ' + labels[activeReg] + '.';
+  met.update({ R0: registers[0] !== null ? registers[0] : '—', R1: registers[1] !== null ? registers[1] : '—', R2: registers[2] !== null ? registers[2] : '—' });
+  draw();
+});
+
+const regSel = SimLib.slider('Register', 0, 2, 1, 0, function (v) {
+  activeReg = v;
+  document.getElementById('status').textContent = 'Selected ' + labels[v] + '.';
+  draw();
+});
+
+SimLib.makeButton('Reset', function () {
+  registers[0] = registers[1] = registers[2] = null;
+  inputVal = 0;
+  numInp.value = 0;
+  document.getElementById('status').textContent = 'All registers cleared.';
+  met.update({ R0: '—', R1: '—', R2: '—' });
+  draw();
+});
+
+const met = SimLib.metrics();
+met.update({ R0: '—', R1: '—', R2: '—' });
+draw();
+</script>
+</body>
+</html>

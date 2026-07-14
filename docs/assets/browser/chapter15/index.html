@@ -1,1 +1,115 @@
-../../../../browser/chapter15/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Dynamic Programming Exists</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<p><a href="../../index.html">← Back</a></p>
+<h1>Why Dynamic Programming Exists</h1>
+<p>Naive recursion re-solves sub-problems exponentially. Memoization solves each once.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Choose N and compare.</div>
+<div id="ab-container"></div>
+<canvas id="strip" width="700" height="80"></canvas>
+<script src="../common/sim.js"></script>
+<script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Naive Recursion', 'Memoized', 320, 200);
+const strip = SimLib.stripPlot(document.getElementById('strip'),
+  [{ label: 'naive calls', color: '#ef5350' }, { label: 'memo calls', color: '#43a047' }], 20);
+
+let N = 8;
+
+function naiveFib(n, counter) {
+  counter[0]++;
+  if (n <= 1) return n;
+  return naiveFib(n - 1, counter) + naiveFib(n - 2, counter);
+}
+
+function memoFib(n, memo, counter) {
+  counter[0]++;
+  if (n <= 1) return n;
+  if (memo[n] !== undefined) return memo[n];
+  memo[n] = memoFib(n - 1, memo, counter) + memoFib(n - 2, memo, counter);
+  return memo[n];
+}
+
+// Count calls per sub-problem for naive
+function countPerN(n) {
+  const calls = new Array(n + 1).fill(0);
+  function f(k) { calls[k]++; if (k <= 1) return; f(k - 1); f(k - 2); }
+  f(n);
+  return calls;
+}
+
+function drawPanel(ctx, cv, n, calls, memoized, result) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const maxC = Math.max.apply(null, calls) || 1;
+  const barW = Math.floor((cv.width - 20) / (n + 1));
+  const maxH = cv.height - 50;
+
+  for (let i = 0; i <= n; i++) {
+    const x = 10 + i * barW;
+    const h = Math.floor((calls[i] / maxC) * maxH);
+    ctx.fillStyle = memoized ? '#c8e6c9' : '#ffcdd2';
+    ctx.fillRect(x, cv.height - 30 - h, barW - 2, h);
+    ctx.strokeStyle = '#ccc'; ctx.strokeRect(x, cv.height - 30 - h, barW - 2, h);
+    ctx.fillStyle = '#666'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('f(' + i + ')', x + barW / 2 - 1, cv.height - 16);
+    if (calls[i] > 0) {
+      ctx.fillStyle = '#333'; ctx.font = '10px sans-serif';
+      ctx.fillText(calls[i], x + barW / 2 - 1, cv.height - 32 - h);
+    }
+  }
+
+  ctx.fillStyle = '#444'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  const total = calls.reduce(function (s, c) { return s + c; }, 0);
+  ctx.fillText('fib(' + n + ')=' + result + '  calls: ' + total, cv.width / 2, 16);
+}
+
+function run() {
+  const naiveCounter = [0];
+  const naiveCalls = countPerN(N);
+  const naiveResult = naiveFib(N, naiveCounter);
+
+  const memoCounter = [0];
+  const memoCalls = new Array(N + 1).fill(0);
+  const memoMemo = {};
+  function memoTrack(n) {
+    memoCalls[n]++;
+    if (n <= 1) return n;
+    if (memoMemo[n] !== undefined) return memoMemo[n];
+    memoMemo[n] = memoTrack(n - 1) + memoTrack(n - 2);
+    return memoMemo[n];
+  }
+  const memoResult = memoTrack(N);
+
+  drawPanel(ctxA, cvA, N, naiveCalls, false, naiveResult);
+  drawPanel(ctxB, cvB, N, memoCalls, true, memoResult);
+
+  const naiveTotal = naiveCalls.reduce(function (s, c) { return s + c; }, 0);
+  const memoTotal = memoCalls.reduce(function (s, c) { return s + c; }, 0);
+  strip.push(0, naiveTotal);
+  strip.push(1, memoTotal);
+
+  met.update({ N: N, 'naive calls': naiveTotal, 'memo calls': memoTotal, 'speedup': (naiveTotal / Math.max(1, memoTotal)).toFixed(1) + '×' });
+  document.getElementById('status').textContent = 'fib(' + N + ')=' + naiveResult + '. Naive: ' + naiveTotal + ' calls. Memo: ' + memoTotal + ' calls.';
+}
+
+SimLib.slider('N', 2, 18, 1, 8, function (v) { N = v; run(); });
+SimLib.makeButton('Run', run);
+
+const met = SimLib.metrics();
+met.update({ N: N, 'naive calls': 0, 'memo calls': 0, speedup: '—' });
+run();
+</script>
+</body>
+</html>

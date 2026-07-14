@@ -5,50 +5,142 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Why Binary Search Exists</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; text-align: center; }
-  canvas { border: 1px solid #ccc; display: block; margin: 1rem auto; background: #fafafa; }
-  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
-  button, input { padding: 0.5rem 0.75rem; font-size: 1rem; }
-  #status { min-height: 1.5rem; color: #444; }
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 1rem; text-align: center; }
+  canvas { border: 1px solid #ccc; display: block; margin: 0.5rem auto; background: #fafafa; }
+  .controls { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+  #status { min-height: 1.5rem; color: #444; margin: 0.4rem 0; }
 </style>
 </head>
 <body>
+<p><a href="../../index.html">← Back</a></p>
 <h1>Why Binary Search Exists</h1>
-<p>Find the target by repeatedly halving the sorted list.</p><div class="controls"><input id="target" type="number" placeholder="Target" value="42"><button id="search">Binary Search</button></div><canvas id="c" width="700" height="150"></canvas><div id="status">Enter a target and watch the interval shrink.</div>
+<p>Linear search checks left to right. Binary search halves the range each step. A/B comparison.</p>
+<div class="controls" id="controls"></div>
+<div id="status">Press Run to compare.</div>
+<div id="ab-container"></div>
+<script src="../common/sim.js"></script>
 <script>
+const container = document.getElementById('ab-container');
+const [ctxA, ctxB, cvA, cvB] = SimLib.sideBySide(container, 'Linear Search O(n)', 'Binary Search O(log n)', 320, 160);
 
-const arr = [3, 7, 12, 18, 25, 31, 36, 42, 55, 61, 72, 88];
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-function draw(lo, hi, mid=-1, found=false) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  arr.forEach((v, i) => {
-    ctx.fillStyle = i < lo || i > hi ? '#e0e0e0' : (i === mid ? (found ? '#66bb6a' : '#ef5350') : '#ffcc80');
-    ctx.fillRect(10 + i * 57, 40, 50, 50);
-    ctx.strokeRect(10 + i * 57, 40, 50, 50);
-    ctx.fillStyle = '#333';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(v, 35 + i * 57, 70);
+let size = 12;
+let arr = [];
+let target = 0;
+// linear state
+let linStep = 0, linFound = -1, linDone = false;
+// binary state
+let lo = 0, hi = 0, binMid = -1, binFound = -1, binDone = false, binChecks = 0;
+let rafId = null, lastTick = 0;
+
+function build() {
+  arr = [];
+  for (let i = 0; i < size; i++) arr.push(i * 7 + 3);
+  const pos = Math.floor(Math.random() * size);
+  target = arr[pos];
+  linStep = 0; linFound = -1; linDone = false;
+  lo = 0; hi = size - 1; binMid = -1; binFound = -1; binDone = false; binChecks = 0;
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  drawBoth();
+  document.getElementById('status').textContent = 'Target: ' + target + '. Press Run.';
+  met.update({ target: target, size: size, 'linear checks': 0, 'binary checks': 0 });
+}
+
+function cellW(cv) { return Math.min(50, Math.floor((cv.width - 10) / size)); }
+
+function drawLinear() {
+  const cv = cvA; const ctx = ctxA;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cw = cellW(cv), cellH = 48, startX = Math.floor((cv.width - cw * size) / 2), cellY = 35;
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Target: ' + target, cv.width / 2, 20);
+  arr.forEach(function (v, i) {
+    const x = startX + i * cw;
+    const past = i < linStep, current = i === linStep, isFound = i === linFound;
+    ctx.fillStyle = isFound ? '#c8e6c9' : (current ? '#fff176' : (past ? '#ffcdd2' : '#f5f5f5'));
+    ctx.fillRect(x, cellY, cw - 2, cellH);
+    ctx.strokeStyle = (current || isFound) ? '#f57f17' : '#ccc';
+    ctx.lineWidth = (current || isFound) ? 2 : 1;
+    ctx.strokeRect(x, cellY, cw - 2, cellH);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#333'; ctx.font = 'bold ' + Math.min(13, cw - 4) + 'px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(v, x + cw / 2 - 1, cellY + 28);
   });
+  ctx.fillStyle = '#666'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(linDone ? (linFound >= 0 ? 'Found at [' + linFound + '], ' + (linFound + 1) + ' checks' : 'Not found') : (linStep > 0 ? 'Step ' + linStep : '—'), cv.width / 2, cellY + cellH + 16);
 }
-async function search() {
-  let lo = 0, hi = arr.length - 1;
-  const t = parseInt(document.getElementById('target').value);
-  while (lo <= hi) {
-    const mid = Math.floor((lo + hi) / 2);
-    draw(lo, hi, mid, arr[mid] === t);
-    document.getElementById('status').textContent = `lo=${lo}, mid=${mid}, hi=${hi}; arr[mid]=${arr[mid]}`;
-    await new Promise(r => setTimeout(r, 700));
-    if (arr[mid] === t) { document.getElementById('status').textContent = `Found ${t} at index ${mid}.`; return; }
-    if (arr[mid] < t) lo = mid + 1; else hi = mid - 1;
-  }
-  draw(-1, -1);
-  document.getElementById('status').textContent = `${t} not found.`;
-}
-document.getElementById('search').onclick = search;
-draw(0, arr.length - 1);
 
+function drawBinary() {
+  const cv = cvB; const ctx = ctxB;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const cw = cellW(cv), cellH = 48, startX = Math.floor((cv.width - cw * size) / 2), cellY = 35;
+  ctx.fillStyle = '#555'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Target: ' + target, cv.width / 2, 20);
+  arr.forEach(function (v, i) {
+    const x = startX + i * cw;
+    const outOfRange = i < lo || i > hi;
+    const isMid = i === binMid, isFound = i === binFound;
+    ctx.fillStyle = isFound ? '#c8e6c9' : (isMid ? '#fff176' : (outOfRange ? '#e0e0e0' : '#fff9c4'));
+    ctx.fillRect(x, cellY, cw - 2, cellH);
+    ctx.strokeStyle = (isMid || isFound) ? '#f57f17' : '#ccc';
+    ctx.lineWidth = (isMid || isFound) ? 2 : 1;
+    ctx.strokeRect(x, cellY, cw - 2, cellH);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = outOfRange ? '#aaa' : '#333'; ctx.font = 'bold ' + Math.min(13, cw - 4) + 'px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(v, x + cw / 2 - 1, cellY + 28);
+  });
+  ctx.fillStyle = '#666'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(binDone ? (binFound >= 0 ? 'Found at [' + binFound + '], ' + binChecks + ' checks' : 'Not found, ' + binChecks + ' checks') : (binChecks > 0 ? 'lo=' + lo + ' hi=' + hi + ' mid=' + binMid : '—'), cv.width / 2, cellY + cellH + 16);
+}
+
+function drawBoth() { drawLinear(); drawBinary(); }
+
+function tick(ts) {
+  if (ts - lastTick < 400) { rafId = requestAnimationFrame(tick); return; }
+  lastTick = ts;
+  let anyRunning = false;
+
+  if (!linDone) {
+    if (arr[linStep] === target) { linFound = linStep; linDone = true; }
+    else if (linStep >= size - 1) { linDone = true; }
+    else { linStep++; }
+    anyRunning = true;
+  }
+  if (!binDone) {
+    if (lo > hi) { binDone = true; }
+    else {
+      binMid = Math.floor((lo + hi) / 2);
+      binChecks++;
+      if (arr[binMid] === target) { binFound = binMid; binDone = true; }
+      else if (arr[binMid] < target) lo = binMid + 1;
+      else hi = binMid - 1;
+    }
+    anyRunning = true;
+  }
+
+  drawBoth();
+  const lc = linDone ? (linFound >= 0 ? linFound + 1 : size) : linStep + 1;
+  met.update({ target: target, size: size, 'linear checks': lc, 'binary checks': binChecks, 'savings': Math.max(0, lc - binChecks) });
+
+  if (anyRunning && !(linDone && binDone)) {
+    rafId = requestAnimationFrame(tick);
+  } else {
+    document.getElementById('status').textContent = 'Binary used ' + binChecks + ' checks vs ' + lc + ' for linear.';
+    rafId = null;
+  }
+}
+
+SimLib.slider('Array size', 5, 20, 1, 12, function (v) { size = v; build(); });
+SimLib.makeButton('Run', function () {
+  linStep = 0; linFound = -1; linDone = false;
+  lo = 0; hi = size - 1; binMid = -1; binFound = -1; binDone = false; binChecks = 0;
+  if (rafId) cancelAnimationFrame(rafId);
+  lastTick = 0; drawBoth();
+  rafId = requestAnimationFrame(tick);
+});
+SimLib.makeButton('New array', build);
+
+const met = SimLib.metrics();
+build();
 </script>
 </body>
 </html>

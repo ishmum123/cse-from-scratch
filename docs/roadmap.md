@@ -1,92 +1,93 @@
 # Roadmap
 
+All 60 chapters complete. Each is a discovery-driven narrative with failed attempts, the moment of insight, and an interactive in-page simulation running in the browser — nothing to install.
+
 ## Part I — Information
 
-- [x] [Why Counting Exists](01-why-counting-exists.md)
-- [ ] [Why Numbers Need Memory](02-why-numbers-need-memory.md)
-- [ ] [Why Arrays Exist](03-why-arrays-exist.md)
-- [ ] [Why Memory Has Addresses](04-why-memory-has-addresses.md)
-- [ ] [Why Copying Is Expensive](05-why-copying-is-expensive.md)
-- [ ] [Why Locality Matters](06-why-locality-matters.md)
+- [x] [When Words Weren't Enough](01-why-counting-exists.md)
+- [x] [The Number That Vanishes When You Look Away](02-why-numbers-need-memory.md)
+- [x] [One Name for a Thousand Slots](03-why-arrays-exist.md)
+- [x] [The Warehouse Without Aisle Numbers](04-why-memory-has-addresses.md)
+- [x] [Why Sending a Book Is Slower Than Sending Its Address](05-why-copying-is-expensive.md)
+- [x] [The Desk That Makes You Fast](06-why-locality-matters.md)
 
 ## Part II — Searching
 
-- [ ] [Why Looking Is Slow](07-why-looking-is-slow.md)
-- [ ] [Why Ordering Helps](08-why-ordering-helps.md)
-- [ ] [Why Binary Search Exists](09-why-binary-search-exists.md)
-- [ ] [Why Trees Exist](10-why-trees-exist.md)
-- [ ] [Why Balancing Exists](11-why-balancing-exists.md)
-- [ ] [Why Hashing Exists](12-why-hashing-exists.md)
+- [x] [The Inevitable Tax of Not Knowing Where Things Are](07-why-looking-is-slow.md)
+- [x] [What a Dictionary Knew That a Pile of Papers Didn't](08-why-ordering-helps.md)
+- [x] [Why Halving Beats Hunting](09-why-binary-search-exists.md)
+- [x] [The Sorted Array That Couldn't Keep Up](10-why-trees-exist.md)
+- [x] [When the Tree Grows Only to the Right](11-why-balancing-exists.md)
+- [x] [The Slot That Knows Where to Find Itself](12-why-hashing-exists.md)
 
 ## Part III — Organization
 
-- [ ] [Why Sorting Exists](13-why-sorting-exists.md)
-- [ ] [Why Divide and Conquer Works](14-why-divide-and-conquer-works.md)
-- [ ] [Why Dynamic Programming Exists](15-why-dynamic-programming-exists.md)
-- [ ] [Why Greedy Sometimes Works](16-why-greedy-sometimes-works.md)
-- [ ] [Why Graphs Matter](17-why-graphs-matter.md)
+- [x] [Order as Infrastructure](13-why-sorting-exists.md)
+- [x] [The Algorithm That Wins by Shrinking the Problem](14-why-divide-and-conquer-works.md)
+- [x] [The Recursion That Kept Solving the Same Problem](15-why-dynamic-programming-exists.md)
+- [x] [The Shortcut That's Occasionally Correct](16-why-greedy-sometimes-works.md)
+- [x] [When the World Is Made of Connections](17-why-graphs-matter.md)
 
 ## Part IV — Computation
 
-- [ ] [Why Functions Exist](18-why-functions-exist.md)
-- [ ] [Why Recursion Exists](19-why-recursion-exists.md)
-- [ ] [Why Stacks Exist](20-why-stacks-exist.md)
-- [ ] [Why Queues Exist](21-why-queues-exist.md)
-- [ ] [Why Schedulers Exist](22-why-schedulers-exist.md)
+- [x] [The Invention of Forgetting What You Don't Need to Know](18-why-functions-exist.md)
+- [x] [The Problem That Contains a Smaller Copy of Itself](19-why-recursion-exists.md)
+- [x] [The Structure That Remembers in Reverse](20-why-stacks-exist.md)
+- [x] [Order Preserved Under Pressure](21-why-queues-exist.md)
+- [x] [Who Runs Next and Why It Matters](22-why-schedulers-exist.md)
 
 ## Part V — Operating Systems
 
-- [ ] [Why Processes Exist](23-why-processes-exist.md)
-- [ ] [Why Threads Exist](24-why-threads-exist.md)
-- [ ] [Why Locks Exist](25-why-locks-exist.md)
-- [ ] [Why Deadlocks Happen](26-why-deadlocks-happen.md)
-- [ ] [Why Virtual Memory Exists](27-why-virtual-memory-exists.md)
-- [ ] [Why Context Switching Costs](28-why-context-switching-costs.md)
+- [x] [Walls Between Programs](23-why-processes-exist.md)
+- [x] [Doing Two Things at Once Inside One Program](24-why-threads-exist.md)
+- [x] [The Price of Sharing](25-why-locks-exist.md)
+- [x] [When Waiting Waits Forever](26-why-deadlocks-happen.md)
+- [x] [The Illusion of Infinite Memory](27-why-virtual-memory-exists.md)
+- [x] [The Hidden Tax of Multitasking](28-why-context-switching-costs.md)
 
 ## Part VI — Databases
 
-- [ ] [Why Files Aren't Enough](29-why-files-arent-enough.md)
-- [ ] [Why Indexes Exist](30-why-indexes-exist.md)
-- [ ] [Why B-Trees Won](31-why-b-trees-won.md)
-- [ ] [Why Transactions Exist](32-why-transactions-exist.md)
-- [ ] [Why MVCC Exists](33-why-mvcc-exists.md)
-- [ ] [Why Query Planners Matter](34-why-query-planners-matter.md)
+- [x] [When the Filing Cabinet Breaks Down](29-why-files-arent-enough.md)
+- [x] [The Shortcut That Makes Databases Fast](30-why-indexes-exist.md)
+- [x] [Designed for the Disk](31-why-b-trees-won.md)
+- [x] [All or Nothing](32-why-transactions-exist.md)
+- [x] [Readers and Writers, Without the Wait](33-why-mvcc-exists.md)
+- [x] [The Optimizer You Never See](34-why-query-planners-matter.md)
 
 ## Part VII — Networking
 
-- [ ] [Why Computers Need Addresses](35-why-computers-need-addresses.md)
-- [ ] [Why Packets Exist](36-why-packets-exist.md)
-- [ ] [Why TCP Exists](37-why-tcp-exists.md)
-- [ ] [Why Congestion Happens](38-why-congestion-happens.md)
-- [ ] [Why Load Balancers Exist](39-why-load-balancers-exist.md)
+- [x] [Names That Route](35-why-computers-need-addresses.md)
+- [x] [Slicing the Stream](36-why-packets-exist.md)
+- [x] [Reliable Delivery Over an Unreliable Network](37-why-tcp-exists.md)
+- [x] [The Tragedy of the Shared Pipe](38-why-congestion-happens.md)
+- [x] [Traffic Control at Scale](39-why-load-balancers-exist.md)
 
 ## Part VIII — Distributed Systems
 
-- [ ] [Why One Computer Isn't Enough](40-why-one-computer-isnt-enough.md)
-- [ ] [Why Clocks Lie](41-why-clocks-lie.md)
-- [ ] [Why Consensus Exists](42-why-consensus-exists.md)
-- [ ] [Why Raft Works](43-why-raft-works.md)
-- [ ] [Why Eventual Consistency Exists](44-why-eventual-consistency-exists.md)
-- [ ] [Why Distributed Transactions Hurt](45-why-distributed-transactions-hurt.md)
+- [x] [The Wall a Single Machine Always Hits](40-why-one-computer-isnt-enough.md)
+- [x] [When Every Clock Disagrees](41-why-clocks-lie.md)
+- [x] [When Agreement Itself Is Hard](42-why-consensus-exists.md)
+- [x] [Why Raft Makes Consensus Understandable](43-why-raft-works.md)
+- [x] [The Price of Always Being Right](44-why-eventual-consistency-exists.md)
+- [x] [The Coordinator's Dilemma](45-why-distributed-transactions-hurt.md)
 
 ## Part IX — System Design
 
-- [ ] [Why Caches Exist](46-why-caches-exist.md)
-- [ ] [Why CDNs Exist](47-why-cdns-exist.md)
-- [ ] [Why Queues Exist](48-why-queues-exist.md)
-- [ ] [Why Sharding Exists](49-why-sharding-exists.md)
-- [ ] [Why Replication Exists](50-why-replication-exists.md)
-- [ ] [Why Search Engines Exist](51-why-search-engines-exist.md)
+- [x] [Why the Nearest Copy Wins](46-why-caches-exist.md)
+- [x] [The Speed of Light Is the Bottleneck](47-why-cdns-exist.md)
+- [x] [The Buffer Between Fast Producers and Slow Consumers](48-why-queues-exist.md)
+- [x] [Splitting the Table Too Big to Hold](49-why-sharding-exists.md)
+- [x] [One Copy Is a Liability](50-why-replication-exists.md)
+- [x] [Finding a Needle Without Knowing What a Needle Looks Like](51-why-search-engines-exist.md)
 
 ## Part X — Artificial Intelligence Infrastructure
 
-- [ ] [Why GPUs Changed Everything](52-why-gpus-changed-everything.md)
-- [ ] [Why Matrix Multiplication Matters](53-why-matrix-multiplication-matters.md)
-- [ ] [Why Attention Exists](54-why-attention-exists.md)
-- [ ] [Why Transformers Scale](55-why-transformers-scale.md)
-- [ ] [Why KV Cache Exists](56-why-kv-cache-exists.md)
-- [ ] [Why Quantization Exists](57-why-quantization-exists.md)
-- [ ] [Why Tensor Parallelism Exists](58-why-tensor-parallelism-exists.md)
-- [ ] [Why MoE Exists](59-why-moe-exists.md)
-- [ ] [Why Inference Servers Exist](60-why-inference-servers-exist.md)
-
+- [x] [Ten Thousand Workers Instead of One Fast One](52-why-gpus-changed-everything.md)
+- [x] [The One Operation That Runs the World's AI](53-why-matrix-multiplication-matters.md)
+- [x] [Every Word Is Watching Every Other Word](54-why-attention-exists.md)
+- [x] [Why More Data and More Compute Keep Helping](55-why-transformers-scale.md)
+- [x] [Never Recompute What You Already Know](56-why-kv-cache-exists.md)
+- [x] [Fitting the Ocean into a Smaller Bottle](57-why-quantization-exists.md)
+- [x] [Splitting the Model Across the Machines](58-why-tensor-parallelism-exists.md)
+- [x] [Specialists Instead of One Generalist](59-why-moe-exists.md)
+- [x] [Where All the Arcs Meet](60-why-inference-servers-exist.md)
