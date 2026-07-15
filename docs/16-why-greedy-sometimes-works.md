@@ -69,7 +69,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter16/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the `earliestFinish` sort comparator — that single sort key is what makes the greedy provably optimal, and the alternative comparators right beside it are where the counterexamples appear.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter16/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The sim demonstrates the coin-change problem: `greedySolve(amount, coins)` picks the largest denomination that fits at each step, while `dpSolve()` builds the optimal solution bottom-up — with the default coins [1, 4, 15, 20] and amount 30, greedy gets the wrong answer and the side-by-side coin rows show exactly where it diverges from the DP optimum.
 
 ## When It Breaks
 

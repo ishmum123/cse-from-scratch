@@ -85,7 +85,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter19/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the recursive `traverse` function that calls itself on each subdirectory — the base case check directly above that self-call is what guarantees termination, and removing it shows exactly how quickly infinite recursion crashes the stack.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter19/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The sim computes factorial two ways: `iterSteps(n)` advances a loop counter while `recSteps(n)` pushes frames onto `callStack` and pops them on the way back — the `N` slider lets you watch the animated call stack grow and collapse, making the frame-per-call cost visible.
 
 ## When It Breaks
 

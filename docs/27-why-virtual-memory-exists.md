@@ -65,7 +65,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~160 lines of dependency-free JavaScript — open `browser/chapter27/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `PageTable` class with its `translate(virtualAddr)` method: it checks the present bit, raises a simulated page fault, and invokes either the LRU or FIFO eviction policy. The physical frame grid and the page table entries update live as the simulated program accesses addresses.
+The full model is ~160 lines of dependency-free JavaScript — open `browser/chapter27/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. The sim shows `FRAMES = 16` physical frames: `physAllocate()` demands a contiguous block and fails once fragmentation sets in, while `virtAllocate()` scatters pages to any free frame — the frame grid highlights the difference between a failed physical allocation and a successful virtual one using the same underlying frames.
 
 ## When It Breaks
 

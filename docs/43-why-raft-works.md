@@ -103,7 +103,7 @@ The Ongaro paper specifies Raft at a high level. Production implementations dive
 
 ## Implementation
 
-The simulation is dependency-free JavaScript in `browser/chapter43/index.html` (shared helpers in `browser/common/sim.js`). Look for three distinct state machines — `follower`, `candidate`, `leader` — and the transition rules between them. The `handleAppendEntries()` function shows the log consistency check; the `requestVote()` shows the "at least as up-to-date" comparison.
+The browser simulation is dependency-free JavaScript in `browser/chapter43/index.html` (shared helpers in `browser/common/sim.js`). The right panel tracks `raftLeader` (an integer node index) and `raftTerm`; a crash randomly reassigns `raftLeader` to a surviving node and increments the term. `raftConflicts` counts ticks where no leader is available. The left panel (multi-master) allows any node to write each tick, accumulating `mlConflicts`. The "Write rate %" slider controls how often writes arrive, making the conflict difference between the two approaches visible over time.
 
 ## When It Breaks
 

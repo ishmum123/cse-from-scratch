@@ -75,7 +75,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter11/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the `rotate` function and the balance-factor check that triggers it — those two pieces together are what keeps the AVL tree's height bounded while the plain BST beside it degenerates into a chain.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter11/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The sim builds two trees from the same sorted array: a plain BST via `bstInsert()` (which degenerates to a chain) and a balanced tree via `buildBalanced(arr, lo, hi)`, which recursively picks the midpoint as root — with `bstHeight()` and `balHeight()` tallied live so you can watch the height gap open up.
 
 ## When It Breaks
 

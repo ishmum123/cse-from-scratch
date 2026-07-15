@@ -77,7 +77,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter13/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the `merge` function that combines two sorted halves in a single left-to-right pass — that's the step where O(n log n) earns its keep compared to the O(n²) selection loop running beside it.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter13/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The O(n²) side is bubble sort, stepping through `bubArr` with indices `bubI`/`bubJ` and swapping adjacent out-of-order elements; the O(n log n) side is merge sort, producing steps via `mergeSortSteps()` and combining halves in `merge()` — both panels animate simultaneously so the difference in swap count is immediately visible.
 
 ## When It Breaks
 

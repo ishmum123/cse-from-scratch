@@ -73,7 +73,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter29/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for three storage backends: `FileStore` (linear scan array), `LogStore` (append-only array with in-memory index map), and `TableStore` (array of typed records with per-column indexes). The query executor tries each backend for the same query and displays the number of records examined — the gap between O(n) and O(log n) is visible immediately.
+The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter29/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. The sim shows two panels: `scanReads` steps through all records sequentially (touching every row), while `indexReads = Math.ceil(Math.log2(tableSize + 1))` represents an index lookup — the read counters update live as you drag the table-size slider, making the O(n) vs O(log n) gap concrete without any storage classes.
 
 ## When It Breaks
 

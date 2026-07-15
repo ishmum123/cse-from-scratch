@@ -63,7 +63,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~120 lines of dependency-free JavaScript — open `browser/chapter21/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `RingBuffer` class: it implements head/tail pointers, wrap-around, and the enqueue/dequeue logic. The producer and consumer are separate `setInterval` callbacks to simulate independent rates.
+The full model is ~120 lines of dependency-free JavaScript — open `browser/chapter21/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. The sim uses two plain arrays, `stackQ` and `queueQ`; `stackQ.pop()` removes from the tail (LIFO) while `queueQ.shift()` removes from the front (FIFO), and `requestAnimationFrame` drives both so you can watch how insertion order affects retrieval order at the same tick rate.
 
 ## When It Breaks
 

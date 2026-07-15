@@ -81,7 +81,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter14/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the Karatsuba step that computes `(a+b)(c+d) - ac - bd` to recover the cross-term — that algebraic identity is what reduces four recursive multiplications to three and bends the exponent below 2.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter14/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The sim is a schematic of the divide-and-conquer principle, not a general algorithm — it finds the maximum of an array: `buildDCSteps()` constructs a tournament bracket while an exhaustive scan checks every element, with `exMax` and `dcMax` tracking their comparison counts so you can watch the divide-and-conquer approach do the same work in fewer steps.
 
 ## When It Breaks
 

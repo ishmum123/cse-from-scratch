@@ -101,7 +101,7 @@ The original Paxos paper (Lamport, 1998) describes single-decree Paxos: consensu
 
 ## Implementation
 
-The simulation is dependency-free JavaScript in `browser/chapter42/index.html` (shared helpers in `browser/common/sim.js`). Look for the two-phase structure: `prepare()` and `accept()` handlers, and the rule in `accept()` that checks whether a prior value must be inherited. That constraint — about eight lines — is the core of Paxos safety.
+The browser simulation is dependency-free JavaScript in `browser/chapter42/index.html` (shared helpers in `browser/common/sim.js`). The sim is a schematic of quorum safety, not a full Paxos implementation — `runRound()` generates random per-node votes, then evaluates two strategies: split-brain (two halves each decide independently, producing `splitConflicts`) versus majority quorum (all votes pooled, decide only if `yeas > valid.length / 2`). The "Fail %" slider controls how many votes are `null`; the "Nodes" slider (odd numbers) shows why quorums require odd-sized groups.
 
 ## When It Breaks
 

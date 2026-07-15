@@ -65,7 +65,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter46/index.html` (shared helpers in `browser/common/sim.js`). Look for the `get()` function's lock-check before the database call, and the eviction logic in `set()` — those two functions together implement the core cache semantics. The LRU list is updated on every hit.
+The browser simulation is dependency-free JavaScript in `browser/chapter46/index.html` (shared helpers in `browser/common/sim.js`). The LRU cache is `cacheKeys`, a plain array used as an ordered list. On each request, `cacheKeys.indexOf(key)` checks for a hit; a hit splices the key to the back (most-recently-used), while a miss pushes the key and evicts the front entry when `cacheKeys.length > cacheSize`. The `cacheHits` and `cacheMisses` counters track throughput; the right panel's average latency blends `5ms` for hits against `dbLatency` for misses.
 
 ## When It Breaks
 

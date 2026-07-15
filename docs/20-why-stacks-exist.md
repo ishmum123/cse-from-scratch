@@ -82,7 +82,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter20/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the `top` pointer that advances on push and retreats on pop — that one variable is the entire stack mechanism, and watching it move as a simulated call chain executes makes the LIFO order impossible to miss.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter20/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The stack is a plain `stack` array; `stack.length` serves as the stack pointer, labeled `← SP (top)` on the canvas — push appends to the array, pop removes from the end, and the canvas redraws after each operation so the LIFO order is impossible to miss.
 
 ## When It Breaks
 

@@ -70,7 +70,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter53/index.html` (shared helpers in `browser/common/sim.js`). Look for both `naiveMatMul()` and `tiledMatMul()` side by side — the tiled version's inner loop loads a tile into a local buffer before computing, which is the shared-memory pattern. The memory access counter shows the difference directly.
+The browser simulation is dependency-free JavaScript in `browser/chapter53/index.html` (shared helpers in `browser/common/sim.js`). The sim is a schematic of operation counts, not the matrix kernels themselves — `naiveOps = n³` and `tiledOps = Math.round(naiveOps / 4)` are computed from the `matrixN` slider and used to drive progress-bar animations in `drawMatrix()`. Both panels show a grid of cells lighting up as "computed"; the tiled panel finishes ~4× faster because `tiledOps` is one quarter of `naiveOps`. A real tiled implementation also manages a local tile buffer and loop blocking — this sim shows the operation-count advantage that motivates those patterns.
 
 ## When It Breaks
 

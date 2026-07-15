@@ -67,7 +67,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter51/index.html` (shared helpers in `browser/common/sim.js`). Look for the `buildIndex()` function that computes TF per document and IDF across the corpus, and the `query()` function that scores posting list intersections. The BM25 scoring formula is about 5 lines — readable inline.
+The browser simulation is dependency-free JavaScript in `browser/chapter51/index.html` (shared helpers in `browser/common/sim.js`). The sim is a schematic of index selectivity, not a TF-IDF or BM25 scorer. Each tick a query runs: `scanTouched = numDocs` on the left (full scan), `idxTouched = Math.round(numDocs * matchRate / 100)` on the right (index lookup returns only matching docs). The "Match rate %" slider controls how selective the query is; at low selectivity the index saves dramatically, at high selectivity the gap narrows. A real inverted index also computes and ranks by relevance scores — this sim shows the I/O savings that make that ranking feasible.
 
 ## When It Breaks
 

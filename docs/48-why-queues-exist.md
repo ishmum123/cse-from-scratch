@@ -69,7 +69,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter48/index.html` (shared helpers in `browser/common/sim.js`). Look for the visibility timeout loop that scans in-flight messages and re-queues expired ones — that's the at-least-once guarantee in about 10 lines. The producer rate vs consumer rate sliders show queue depth dynamics directly.
+The browser simulation is dependency-free JavaScript in `browser/chapter48/index.html` (shared helpers in `browser/common/sim.js`). The sim is a schematic of queue depth dynamics, not a message broker. Each tick, `queueDepth` changes by `produceRate - consumeRate` (clamped to zero); when `produceRate > consumeRate`, depth grows and `drawQueue()` shows backlog building. The left panel (synchronous) stalls the producer whenever `stall = produceRate > consumeRate`, accumulating `syncStalls`. Use the produce/consume sliders to find the crossover point where backlog drains instead of accumulates.
 
 ## When It Breaks
 

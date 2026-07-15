@@ -67,7 +67,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter56/index.html` (shared helpers in `browser/common/sim.js`). Look for the `generate()` function: the first call processes all input tokens in parallel (prefill, no cache), then each subsequent call does a single-token forward pass using the accumulated `kv_cache` dict. The cache append operation and the attention computation that uses cached K/V are the core pattern.
+The browser simulation is dependency-free JavaScript in `browser/chapter56/index.html` (shared helpers in `browser/common/sim.js`). The sim is a schematic of recompute cost, not the KV cache data structure itself — `ops = hasCache ? 1 : (step + 1)` captures the key asymmetry: without caching, every decode step re-attends to all previous tokens; with the cache checkbox enabled, each step costs 1 operation. `drawTokens()` lights up tokens up to the current `step`, and `noKvRecompute`/`kvRecompute` counters accumulate total work to make the difference visible over a full generation pass.
 
 ## When It Breaks
 

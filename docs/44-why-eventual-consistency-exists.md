@@ -69,7 +69,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter44/index.html` (shared helpers in `browser/common/sim.js`). Look for the `merge()` function — in CRDT mode it's element-wise max; in LWW mode it's timestamp comparison. The difference in those few lines illustrates the entire correctness gap.
+The browser simulation is dependency-free JavaScript in `browser/chapter44/index.html` (shared helpers in `browser/common/sim.js`). The sim demonstrates replica lag, not a CRDT merge algorithm. The primary increments `primaryVal` each tick; `replicaHistory` records each value, and the replica reads `replicaHistory[length - 1 - lagTicks]` — a fixed-delay view of the primary. `staleReads` counts ticks where the replica lags behind; the right panel simulates read-your-writes by routing reads back to the primary when the session wrote recently. The "Lag ticks" slider controls how stale the replica is.
 
 ## When It Breaks
 

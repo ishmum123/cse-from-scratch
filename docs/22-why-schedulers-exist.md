@@ -65,7 +65,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~150 lines of dependency-free JavaScript — open `browser/chapter22/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for three scheduler classes — `FIFOScheduler`, `PriorityScheduler`, and `CFSScheduler` — each implementing a `selectNext(runQueue)` method. The Gantt-chart rendering is separate so you can swap schedulers without touching the display logic.
+The full model is ~150 lines of dependency-free JavaScript — open `browser/chapter22/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Both schedulers are inline in the `frame()` function: FIFO runs each job in `fifoJobs` to completion before moving on, while Round-Robin steps through `rrJobs` giving each a fixed quantum per tick — the Gantt strips update side-by-side so starvation under FIFO is immediately visible.
 
 ## When It Breaks
 

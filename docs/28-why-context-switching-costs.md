@@ -70,7 +70,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~150 lines of dependency-free JavaScript — open `browser/chapter28/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `CPU` class with a simulated L1 cache (fixed-size LRU map): each tick, the running thread accesses memory addresses from its working set, hitting or missing the cache. On a context switch, the cache is *not* cleared but competing working sets gradually evict each other's entries — the warm-up penalty emerges naturally from the simulation rather than being hard-coded.
+The full model is ~150 lines of dependency-free JavaScript — open `browser/chapter28/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. The sim is formula-driven: `switchCost`, `shortQ`, and `longQ` sliders feed the expression `lOH = switchCost * (shortQ / longQ)`, so overhead as a fraction of useful work updates live — a schematic of the cost model rather than a CPU simulation, making the quantum-vs-overhead tradeoff immediately manipulable.
 
 ## When It Breaks
 

@@ -67,7 +67,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~120 lines of dependency-free JavaScript — open `browser/chapter35/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `IPAddress` class with `network()` and `host()` methods that apply the subnet mask. The `Router` class holds a simplified routing table and implements longest-prefix-match: for each destination IP, it finds the most specific matching prefix and forwards accordingly.
+The browser simulation is dependency-free JavaScript in `browser/chapter35/index.html` (shared helpers in `browser/common/sim.js`). Both panels use `nodePositions()` to place nodes in a ring and `drawNet()` to animate packet delivery. On the left (broadcast), every node lights up on each send; on the right (addressed), only the `destNode` is highlighted. The `bcastTotal` and `routeTotal` counters accumulate wasted transmissions vs. efficient direct delivery, and the "Dest node" and "Nodes" sliders update both panels live.
 
 ## When It Breaks
 

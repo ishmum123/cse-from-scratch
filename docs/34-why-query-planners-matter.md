@@ -82,7 +82,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter34/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `CostModel` class that estimates I/O and CPU costs for nested loop, hash join, and merge join given row counts and selectivity. The `PlanEnumerator` tries both join orderings and both index-scan and seq-scan options for each table, returning the plan tree with the minimum estimated cost and the actual simulated cost.
+The browser simulation is dependency-free JavaScript in `browser/chapter34/index.html` (shared helpers in `browser/common/sim.js`). The key function is `planSmartCost(n, sel)`: when `sel < 20` it returns `ceil(log2(n+1))` (index seek); otherwise it falls back to a full scan costing `n`. The left panel always pays `naiveCost = tableSize`; the right panel pays `smartCost` and labels its plan accordingly. The `tableSize` and `selectivity` sliders let you find the crossover point where full-scan becomes cheaper than the index.
 
 ## When It Breaks
 

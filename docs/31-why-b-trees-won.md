@@ -70,7 +70,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~180 lines of dependency-free JavaScript — open `browser/chapter31/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `BPlusTree` class with `insert(key)`, `search(key)`, and `rangeSearch(lo, hi)` methods. The `split()` helper shows how internal nodes absorb the median key during a node overflow. The leaf linked-list is maintained explicitly so range scans can traverse it without re-entering the tree.
+The browser simulation is dependency-free JavaScript in `browser/chapter31/index.html` (shared helpers in `browser/common/sim.js`). The sim is a schematic of depth and fan-out, not a full B+-tree implementation — `bstDepth(n)` computes `ceil(log₂(n+1))` for the BST side, and `btreeDepth(n)` computes `ceil(log_FANOUT(n+1))` for the B-tree side. The `FANOUT` slider (2–8) redraws both panels live; `drawBST()` and `drawBtree()` visualise the resulting page-chunked layout. A real B+-tree also splits nodes on overflow and maintains a leaf linked-list for range scans — this sim shows the depth savings that motivate those mechanisms.
 
 ## When It Breaks
 

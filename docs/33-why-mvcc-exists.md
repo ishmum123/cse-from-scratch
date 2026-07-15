@@ -69,7 +69,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~150 lines of dependency-free JavaScript — open `browser/chapter33/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `Row` class which stores a version chain (linked list of `{xmin, xmax, value}` entries). The `isVisible(row, snapshotId)` function encodes the visibility rule. The `vacuum()` function walks all rows and removes version entries where `xmax < minActiveSnapshot`.
+The browser simulation is dependency-free JavaScript in `browser/chapter33/index.html` (shared helpers in `browser/common/sim.js`). The MVCC side maintains a `versions` array of `{txId, value}` objects; a "Writer writes" button calls `unshift()` to prepend a new version and `pop()` to trim old ones, so the array always shows the most-recent-first version chain. The left panel (locking) blocks all readers when `writerActive` is true; the right panel (MVCC) always serves `numReaders` operations per tick regardless of writer state. `lockTotal` and `mvccTotal` counters accumulate throughput and feed the strip chart.
 
 ## When It Breaks
 

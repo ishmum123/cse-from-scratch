@@ -70,7 +70,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter38/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `TCPFlow` class with `cwnd`, `ssthresh`, and `state` (slow_start / congestion_avoidance). The `onAck()` method implements AIMD increase; `onLoss()` implements the halving. The bottleneck router is a shared `Queue` with a finite capacity that drops on overflow, generating the loss signals all senders respond to.
+The browser simulation is dependency-free JavaScript in `browser/chapter38/index.html` (shared helpers in `browser/common/sim.js`). The left panel uses `floodWin` (fixed at maximum); the right panel uses `aimdWin`, which increments by 1 each tick and halves whenever the window exceeds `capacity`. The `dropRate(win, cap)` helper computes the fraction of dropped packets. Counters `floodDrops`/`aimdDrops` and `floodTotal`/`aimdTotal` accumulate in `frame()` and feed the strip chart — watch the AIMD side's sawtooth pattern emerge as you adjust the "Link capacity" slider.
 
 ## When It Breaks
 

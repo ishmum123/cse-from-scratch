@@ -69,7 +69,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~160 lines of dependency-free JavaScript — open `browser/chapter30/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `BTreeIndex` class: each node stores up to `order` keys and child pointers. The `search(key)` and `rangeSearch(lo, hi)` methods show the path through the tree with the number of nodes visited highlighted at each step.
+The full model is ~160 lines of dependency-free JavaScript — open `browser/chapter30/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. `buildTable()` populates the row grid; clicking a row without an index shows `scanReads = numRows` touching every record, while clicking with the hash index enabled drops to `idxReads = 1` — a schematic of the lookup-cost gap rather than a B-tree implementation.
 
 ## When It Breaks
 

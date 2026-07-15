@@ -69,7 +69,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~130 lines of dependency-free JavaScript — open `browser/chapter36/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `Packet` class with source, destination, sequence number, and payload fields. The `Router` class has a `forwardingTable` map and a `queue` for outbound packets. The `Network` class simulates propagation delay and allows you to disable links mid-transfer to observe rerouting.
+The browser simulation is dependency-free JavaScript in `browser/chapter36/index.html` (shared helpers in `browser/common/sim.js`). The left panel is circuit switching: each attempt sends `totalBytes` at once; a random draw against `lossRate` either delivers everything or nothing, incrementing `circuitDelivered` or `circuitAttempts` accordingly. The right panel sends `pktSize`-byte packets individually; each has an independent loss draw, so partial progress is preserved. The `lossRate` and `pktSize` sliders let you see directly how finer granularity improves delivery under loss.
 
 ## When It Breaks
 

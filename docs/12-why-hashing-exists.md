@@ -75,7 +75,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter12/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the hash function and the collision-resolution branch that follows it — toggling between chaining and open addressing in that one spot shows how each strategy degrades as the load factor rises.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter12/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). `hashFn(k)` maps each key to `key % SLOTS`, and collisions are resolved by linear probing into `hashTable` — the right panel runs a sequential scan through `linearArr` for comparison, so you can see exactly how many slots each strategy touches per lookup as the table fills.
 
 ## When It Breaks
 

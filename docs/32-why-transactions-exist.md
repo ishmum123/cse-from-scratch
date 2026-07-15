@@ -73,7 +73,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~160 lines of dependency-free JavaScript — open `browser/chapter32/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `WAL` class that appends log records before page writes, the `recover()` function that replays the log after a crash button press, and the `Transaction` class that tracks begin/commit/rollback state. The simulation lets you crash at any step and observe the recovery outcome.
+The browser simulation is dependency-free JavaScript in `browser/chapter32/index.html` (shared helpers in `browser/common/sim.js`). Both panels animate a bank transfer between accounts (`noTxA`/`noTxB` on the left, `txA`/`txB` on the right), starting at `initA=100` and `initB=50`. The step buttons advance `noTxStep` and `txState` through debit, credit, commit, and rollback using `setTimeout` transitions. The "Crash" button leaves the left panel in a broken half-applied state, while the right panel rolls back to `initA` — the invariant `total === (initA + initB)` is displayed in both panels to make the difference visible.
 
 ## When It Breaks
 

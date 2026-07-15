@@ -80,7 +80,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~160 lines of dependency-free JavaScript — open `browser/chapter40/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `Node` class with `mode` (cp / ap) and `replicationLog`. The `write(key, value)` method blocks until quorum in CP mode and returns immediately in AP mode. The `partition(nodeA, nodeB)` function severs the message channel between two nodes. The `heal()` function triggers reconciliation, where conflicting writes are resolved by last-write-wins based on logical timestamps.
+The browser simulation is dependency-free JavaScript in `browser/chapter40/index.html` (shared helpers in `browser/common/sim.js`). The sim contrasts vertical scaling (single node) against horizontal sharding. The left panel tracks `singleLoad` and shows it overflowing when it exceeds `nodeCapacity`. The right panel distributes each tick's `incoming` data across `shardLoads[]` — `numShards` entries each receiving `perShard = incoming / numShards`. The "Num shards" slider immediately rescales the right panel, letting you find the shard count at which no individual node overflows.
 
 ## When It Breaks
 

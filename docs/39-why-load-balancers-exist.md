@@ -71,7 +71,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~130 lines of dependency-free JavaScript — open `browser/chapter39/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `LoadBalancer` class with a `backends` list, `healthCheck()` called periodically per backend, and `route(request)` implementing round-robin and least-connections. Each `Backend` has a configurable latency and failure rate to simulate realistic conditions.
+The browser simulation is dependency-free JavaScript in `browser/chapter39/index.html` (shared helpers in `browser/common/sim.js`). The right panel maintains `lbServers`, an array of `{id, alive, queue}` objects. Each tick, arriving requests are spread evenly: `perServer = ceil(arrivals / aliveServers.length)`. The "Kill LB server" button marks a server's `alive` flag false; traffic redistributes automatically. `drawSingle()` shows the single server overflowing under load, while `drawLB()` shows queue depth per server — kill a server to watch the others absorb the load.
 
 ## When It Breaks
 

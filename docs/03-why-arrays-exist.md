@@ -70,7 +70,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter03/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the index-arithmetic formula `base + i * elementSize` that drives O(1) random access — and the element-shifting loop that makes insertion O(n).
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter03/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Click any cell to see the formula `address = base + i × 4` flash in the status bar, showing why O(1) random access is guaranteed regardless of index. The sim is a read-only viewer — to experience the O(n) insertion cost, you would add a button that shifts elements right from the clicked cell to make room.
 
 ## When It Breaks
 

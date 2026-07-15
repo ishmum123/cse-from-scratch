@@ -73,7 +73,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter55/index.html` (shared helpers in `browser/common/sim.js`). Look for the layer stack in `forward()`: attention → add+norm → FFN → add+norm. The residual connections are the `+` operations in `add+norm`, and they're what makes 96-layer training stable.
+The browser simulation is dependency-free JavaScript in `browser/chapter55/index.html` (shared helpers in `browser/common/sim.js`). The sim contrasts RNN sequential processing against Transformer parallel processing. `drawRNN()` advances `rnnStep` one token per tick, drawing an arrow from each node to the next; `drawTransformer()` draws all pairwise connections simultaneously. The computed time labels use `rnnTime = seqLen * tokenCost` vs `xfmrTime = tokenCost`, making the parallelism advantage explicit. The "Seq length" slider shows how the RNN's time grows linearly while the Transformer's stays flat.
 
 ## When It Breaks
 

@@ -65,7 +65,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter24/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `Thread` class with its own stack frame and how the shared `counter` variable is incremented from multiple simulated threads. The race condition is reproduced by interleaving read–modify–write steps across threads before any locking is applied.
+The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter24/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. The sim is a schematic of I/O-bound throughput: `makeTasks()` generates tasks with a fixed I/O wait; `singleTasks` processes them serially while `multiTasks` advances all simultaneously — the completion timeline shows how concurrency compresses wall time even when total work is identical.
 
 ## When It Breaks
 

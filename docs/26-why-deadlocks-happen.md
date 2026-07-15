@@ -72,7 +72,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter26/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `transfer(from, to)` function: in the broken version, each thread acquires locks in the order (from, to); toggle the "ordered" flag to see the fix that always acquires the lower-ID lock first. The waits-for graph is drawn live as edges form and the cycle detector highlights the deadlock.
+The full model is ~140 lines of dependency-free JavaScript — open `browser/chapter26/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. The sim is a schematic: two pre-scripted arrays, `deadStates` and `ordStates`, each holding a sequence of snapshots; the Next/Prev buttons step through `stepN` to replay the deadlock forming and then the ordered-acquisition fix — no live lock acquisition or cycle detection, just the key moments rendered clearly.
 
 ## When It Breaks
 

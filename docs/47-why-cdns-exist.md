@@ -65,7 +65,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter47/index.html` (shared helpers in `browser/common/sim.js`). Look for the `edgeRequest()` function: cache lookup, origin fetch on miss, TTL management. The geographic routing logic (which edge server a request reaches) and the hit rate tracker show the latency savings numerically.
+The browser simulation is dependency-free JavaScript in `browser/chapter47/index.html` (shared helpers in `browser/common/sim.js`). Each edge node is an entry in `edgeCaches[]` — a `{version, age}` object. Each tick, `age` increments; when `age > ttlTicks`, the cache is stale (`version < originVersion`). A content update bumps `originVersion`; edge nodes only see it after their TTL expires. `totalStale` counts ticks where any edge serves stale content, and the right panel's CDN latency is a flat `5ms` while the left panel pays `originLatency` on every request.
 
 ## When It Breaks
 

@@ -65,7 +65,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~130 lines of dependency-free JavaScript — open `browser/chapter23/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `Process` class with its own `addressSpace` map and the `fork()` function that creates a child sharing initial page mappings. The copy-on-write simulation marks pages as shared and clones only when a write occurs.
+The full model is ~130 lines of dependency-free JavaScript — open `browser/chapter23/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. The sim tracks two service arrays: `monoState` (a single monolithic process where all components share one `{alive}` flag) and `isoState` (isolated processes, each with its own flag); `crashRandom()` kills all of `monoState` at once but only one entry in `isoState`, showing fault isolation in one click.
 
 ## When It Breaks
 

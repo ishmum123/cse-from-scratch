@@ -65,7 +65,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter49/index.html` (shared helpers in `browser/common/sim.js`). Look for the virtual node ring construction and the `findShard(key)` binary search on the ring. The migration visualization shows which physical shards send data to new shards when the cluster size changes.
+The browser simulation is dependency-free JavaScript in `browser/chapter49/index.html` (shared helpers in `browser/common/sim.js`). The sim contrasts hot-shard routing against uniform distribution. The left panel (`hotLoads`) sends all `requestsPerTick` requests to index 0; the right panel (`hashLoads`) distributes them via `Math.floor(Math.random() * numShards)`. Both panels use `drawShards()` to render per-shard load bars, highlighting any shard exceeding 60% of `requestsPerTick` in red. The "Shards" slider instantly shows how uniform hashing keeps all bars green while the hot shard stays red.
 
 ## When It Breaks
 

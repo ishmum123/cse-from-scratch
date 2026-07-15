@@ -68,7 +68,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter06/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the cache-lookup function that checks L1 → L2 → L3 → RAM in order and tallies hits at each level — that chain is where temporal and spatial locality either pay off or don't.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter06/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The sim runs two Set-based caches, `cacheA` and `cacheB`, each holding `CACHE_SIZE = 4` slots: the sequential side fills them in order (almost always a `Set.has()` hit), while the random side picks arbitrary indices (frequent misses and evictions). A live strip plot shows the diverging hit rates as accesses accumulate.
 
 ## When It Breaks
 

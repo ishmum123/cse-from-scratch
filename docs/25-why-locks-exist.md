@@ -67,7 +67,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~130 lines of dependency-free JavaScript — open `browser/chapter25/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `BankAccount` class: one version with no protection (race condition visible in the counter drift) and one with a `Mutex` that queues waiters and wakes them on release. The spinlock variant is included to show CPU-cycle waste under contention.
+The full model is ~130 lines of dependency-free JavaScript — open `browser/chapter25/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Two plain counters, `racyCount` and `lockedCount`, receive increments from multiple simulated threads: the racy side writes a stale value (`racyCount = stale + incPerTick`) so increments silently collide, while the locked side serialises each increment with a simple flag — the diverging totals make the race loss concrete.
 
 ## When It Breaks
 

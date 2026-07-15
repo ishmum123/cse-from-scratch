@@ -72,7 +72,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript — open `browser/chapter41/index.html` to read or modify it (shared helpers in `browser/common/sim.js`). Look for the `receive(msg)` function that does the `max(local, incoming) + 1` step — that one line is the entire Lamport clock update rule.
+The browser simulation is dependency-free JavaScript in `browser/chapter41/index.html` (shared helpers in `browser/common/sim.js`). The left panel shows `wallClocks` drifting apart using per-node `drift` multipliers controlled by the "Drift factor" slider. The right panel shows `logicalClocks`, updated each tick with the Lamport rule: `logicalClocks[receiver] = Math.max(logicalClocks[receiver], msgTs) + 1`. That one line, live in `frame()`, is the entire clock update — watch the logical clocks converge to consistent ordering while the wall clocks keep diverging.
 
 ## When It Breaks
 

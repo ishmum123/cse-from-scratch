@@ -69,7 +69,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter52/index.html` (shared helpers in `browser/common/sim.js`). Look for the `parallelMatMul()` function that dispatches tiles to simulated worker threads — each tile is independent, matching the CUDA thread model. The memory bandwidth meter shows when compute becomes the bottleneck vs. data starvation.
+The browser simulation is dependency-free JavaScript in `browser/chapter52/index.html` (shared helpers in `browser/common/sim.js`). The left panel uses `drawSerial()` — one node lights up per tick, advancing `serialStep` — while the right panel uses `drawParallel()`, which lights all `seqLen` nodes simultaneously, showing every pairwise connection at once. The strip chart accumulates throughput: the serial side processes one element per tick; the parallel side processes all elements per tick. The "Seq length" slider shows how the throughput gap widens with scale.
 
 ## When It Breaks
 

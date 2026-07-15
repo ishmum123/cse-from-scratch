@@ -81,7 +81,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter17/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the adjacency-list traversal loop inside BFS and Dijkstra — that neighbor-iteration step is where the graph structure directly determines which algorithm is appropriate and why Dijkstra needs a priority queue where BFS needs only a plain queue.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter17/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). BFS is the only traversal here: `bfsQueue` holds the frontier, `bfsVisited` tracks seen nodes, and `adjList()` returns each node's neighbours — clicking a node enqueues it and the animation shows the level-by-level spread across the unweighted graph.
 
 ## When It Breaks
 

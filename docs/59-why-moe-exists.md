@@ -97,7 +97,7 @@ Production MoE models have diverged significantly from the original Shazeer 2017
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter59/index.html` (shared helpers in `browser/common/sim.js`). Look for `gate(x)` which produces softmax scores over experts, `topK()` which selects the active experts, and the `auxiliaryLoss` computation that adds the load balancing term to the training loss. The expert utilization histogram shows routing imbalance directly.
+The browser simulation is dependency-free JavaScript in `browser/chapter59/index.html` (shared helpers in `browser/common/sim.js`). Each tick, `pickTopK(E, k)` selects the active experts: it assigns a random score to each of the `E` experts, sorts by score, and returns the top `k` indices as `activeExperts`. `drawDense()` lights all experts every tick; `drawMoE()` lights only the `activeExperts`. The FLOPs labels compare `denseFlops = numExperts * expertFlops` against `moeFlops = topK * expertFlops`. A real MoE also adds an auxiliary load-balancing loss to prevent all tokens routing to the same expert — the random scoring here ensures each run picks different winners.
 
 ## When It Breaks
 

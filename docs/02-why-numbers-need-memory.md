@@ -61,7 +61,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter02/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the read-modify-write cycle that updates the register's stored value — that single loop is where variable mutation and the uninitialized-read hazard both live.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter02/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The sim shows three registers `R0`–`R2`; the Store button executes `registers[activeReg] = inputVal`, while the "No Register" panel beside them always shows the current input and labels it "lost on change" — making the contrast between persistent and transient storage impossible to miss.
 
 ## When It Breaks
 

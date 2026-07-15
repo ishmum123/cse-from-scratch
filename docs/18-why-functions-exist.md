@@ -79,7 +79,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter18/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the "change counter" that tracks how many call sites require updating when an implementation detail shifts — that number going from many to one is the encapsulation payoff this chapter is about.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter18/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The left panel shows copy-pasted logic repeated across sites while the right panel defines a single `compute(x)` function with multiple call sites; the `callCount` slider controls invocations, and `STEPS_PER_CALL = 3` lines light up per call to make the duplication cost concrete.
 
 ## When It Breaks
 

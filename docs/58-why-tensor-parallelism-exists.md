@@ -71,7 +71,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter58/index.html` (shared helpers in `browser/common/sim.js`). Look for `columnSplit()` and `rowSplit()` which implement the two complementary split strategies, and `allReduce()` which simulates the inter-GPU communication. The timeline view shows GPU utilization alongside communication pauses.
+The browser simulation is dependency-free JavaScript in `browser/chapter58/index.html` (shared helpers in `browser/common/sim.js`). `drawSingle()` shows one device holding the full `modelGB` and taking `baseTime` ms per step; `drawParallel()` splits the model across `K = deviceCount` devices: `perDevMem = modelGB / K` per device, `parallelTime = ceil(baseTime / K) + 5` (the +5 ms represents allreduce overhead). The `VRAM_CAP = 24` GB cap highlights when the single device is over-capacity. Use the "Model size (GB)" and "Device count" sliders to find where parallelism pays for itself despite the communication cost.
 
 ## When It Breaks
 

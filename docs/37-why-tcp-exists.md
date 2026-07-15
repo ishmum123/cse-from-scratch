@@ -76,7 +76,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The full model is ~180 lines of dependency-free JavaScript — open `browser/chapter37/index.html` (and the shared helpers in `browser/common/sim.js`) to read or modify it. Everything runs in the browser; nothing to install. Look for the `TCPSender` class with its `sendWindow`, `sackBlocks`, and `rto` fields. The `TCPReceiver` class maintains an `inOrderBuffer` and out-of-order buffer, generating cumulative ACKs and SACK options. The network layer randomly drops packets based on the configured loss rate.
+The browser simulation is dependency-free JavaScript in `browser/chapter37/index.html` (shared helpers in `browser/common/sim.js`). Both panels track boolean arrays — `naiveRecv` and `tcpRecv` — marking which of the `numPackets` packets have been received. The naive side fires one packet per tick and never retransmits; the TCP side uses `tcpPending` and sends up to a window of 3 via `tcpPending.slice(0, 3)`, removing ACK'd entries and retaining undelivered ones for the next tick. The `lossRate` slider controls random drops on both sides, making the retransmit difference visible over time.
 
 ## When It Breaks
 

@@ -113,7 +113,7 @@ A production inference server is a composition of systems from throughout this c
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter60/index.html` (shared helpers in `browser/common/sim.js`). The simulation encodes the full scheduling loop: request arrival, page allocation, step dispatch, early eviction on completion, and re-admission from the queue. Compare the `staticBatch()` and `continuousBatch()` paths — the key difference is the eviction-on-EOS logic and the per-step vs per-request batching granularity.
+The browser simulation is dependency-free JavaScript in `browser/chapter60/index.html` (shared helpers in `browser/common/sim.js`). The sim is a schematic of GPU utilization under two serving strategies. The left panel builds `singleGPUs[]`: each GPU gets a request only if `i < requestsPerTick`, so idle GPUs stay at 5% utilization. The right panel builds `batchGPUs[]`: all requests are pooled up to `batchSize`, and utilization is `min(1, effectiveReqs / batchSize)`. `singleUtil` and `batchUtil` accumulate average utilization per tick, making the batching advantage visible — raise "Batch size" to see utilization climb.
 
 ## When It Breaks
 

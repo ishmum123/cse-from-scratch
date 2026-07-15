@@ -67,7 +67,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The browser simulation is dependency-free JavaScript in `browser/chapter50/index.html` (shared helpers in `browser/common/sim.js`). Look for the `write()` path that counts acknowledgments before confirming — the W parameter controls this. The `failover()` function shows how the replica with the highest applied position becomes the new primary.
+The browser simulation is dependency-free JavaScript in `browser/chapter50/index.html` (shared helpers in `browser/common/sim.js`). The sim compares availability of a single server against a replicated cluster. Each tick, a random draw against `failProb` determines whether the single server (`singleFailed`) or each of `numReplicas` nodes (`clusterNodes`) is up. `clusterAvail` is true when any replica survives (`clusterNodes.some(n => n)`). `singleUp` and `clusterUp` accumulate available ticks; their percentages feed the strip chart — raise `failProb` to see the cluster's availability advantage widen.
 
 ## When It Breaks
 

@@ -67,7 +67,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter01/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the increment/decrement loop that updates the tally, grouped-tally, and positional representations in lockstep — that's where all three counting schemes live side by side.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter01/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Each stone starts with `counted: false`; clicking it sets `counted = true` and increments `count`, making the status display update to show how many have been claimed. The sim is a schematic of the one-to-one correspondence principle — to make it a full counting system, you would add tally and positional panels that update in lockstep with each assignment.
 
 ## When It Breaks
 

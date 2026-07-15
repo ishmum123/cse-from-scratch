@@ -73,7 +73,7 @@ Before changing anything, predict:
 
 ## Implementation
 
-The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter09/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). Look for the loop that halves `lo`/`hi` each step — and the intentional off-by-one variant right beside it so you can see exactly which boundary condition breaks first.
+The working model is dependency-free JavaScript that runs entirely in your browser — nothing to install. Open `browser/chapter09/index.html` to read or modify it (shared UI helpers live in `browser/common/sim.js`). The binary search tracks `lo` and `hi` pointers, computing `binMid = Math.floor((lo + hi) / 2)` each step and narrowing the window, while a linear scan walks the same array element by element — the step counter shows how quickly the gap between them widens as array size grows.
 
 ## When It Breaks
 
